@@ -1,0 +1,134 @@
+import PYME.ui.manualFoldPanel as afp
+from PYME.Acquire.ui import seqdialog
+from PYME.Acquire.xyztc import MemoryBackend
+
+from . import oidic
+
+import wx
+import logging
+
+logger = logging.getLogger(__name__)
+
+class OIDICPanel(afp.foldingPane):
+    def __init__(self, parent, scope, **kwargs):
+        afp.foldingPane.__init__(self, parent, caption='OIDIC', **kwargs)
+        
+        self.scope=scope
+
+        if hasattr(self.scope, 'stackSettings'):
+            # Keep track of this for toggling purposes
+            self._seq_length = self.scope.stackSettings.GetSeqLength()
+
+        self._init_ctrls()
+
+    def _oidic_pan(self):
+        pan = wx.Panel(parent=self, style=wx.TAB_TRAVERSAL)
+        vsizer = wx.BoxSizer(wx.VERTICAL)
+
+        # 6 or 4-image OIDIC protocol?
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer.Add(wx.StaticText(pan, -1, "Mode:"), 0, wx.ALL | wx.EXPAND, 2)
+        self.oidic_four = wx.RadioButton(pan, -1, '4', style=wx.RB_GROUP)
+        self.oidic_four.Bind(wx.EVT_RADIOBUTTON, self.set_acquisition_four)
+        hsizer.Add(self.oidic_four, 0, wx.ALL | wx.EXPAND, 2)
+        self.oidic_six = wx.RadioButton(pan, -1, '6')
+        self.oidic_six.Bind(wx.EVT_RADIOBUTTON, self.set_acquisition_six)
+        hsizer.Add(self.oidic_six, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
+        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
+        self.oidic_six.SetValue(True)  # enable 6 images per acqusition by default
+
+        # Sample or background image?
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sample = wx.RadioButton(pan, -1, 'Sample', style=wx.RB_GROUP)
+        self.sample.Bind(wx.EVT_RADIOBUTTON, self.set_sample)
+        hsizer.Add(self.sample, 0, wx.ALL | wx.EXPAND, 2)
+        self.background = wx.RadioButton(pan, -1, 'Background')
+        self.background.Bind(wx.EVT_RADIOBUTTON, self.set_background)
+        hsizer.Add(self.background, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
+        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
+        self.sample.SetValue(True)  # enable sample acqusition by default (why?)
+
+        # capture delay (ms) controls time between captures, a little longer
+        # than the liquid crystal settling time
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer.Add(wx.StaticText(pan, -1, "Capture delay (ms):"), 0, wx.ALL, 2)
+        self.capture_delay = wx.TextCtrl(pan, -1, value='300')
+        hsizer.Add(self.capture_delay, 0, wx.ALL, 2)
+        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
+
+        # image averaging decides how many frames to average over per capture
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer.Add(wx.StaticText(pan, -1, "# images to average:"), 0, wx.ALL, 2)
+        self.capture_delay = wx.TextCtrl(pan, -1, value='1')
+        hsizer.Add(self.capture_delay, 0, wx.ALL, 2)
+        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
+
+        # shear distance of the external DIC prism
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer.Add(wx.StaticText(pan, -1, "Shear distance (nm):"), 0, wx.ALL, 2)
+        self.capture_delay = wx.TextCtrl(pan, -1, value='255')
+        hsizer.Add(self.capture_delay, 0, wx.ALL, 2)
+        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
+
+        # Z-stepped?
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.standard = wx.RadioButton(pan, -1, 'Standard', style=wx.RB_GROUP)
+        self.standard.Bind(wx.EVT_RADIOBUTTON, self.toggle_z_stepped)
+        hsizer.Add(self.standard, 0, wx.ALL | wx.EXPAND, 2)
+        self.z_stepped = wx.RadioButton(pan, -1, 'Z-stepped')
+        self.z_stepped.Bind(wx.EVT_RADIOBUTTON, self.toggle_z_stepped)
+        hsizer.Add(self.z_stepped, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
+        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
+        self.standard.SetValue(True)  # non z-stepped by default
+
+        if not hasattr(self.scope, 'stackSettings'):
+            self.z_stepped.Disable()
+
+        pan.SetSizerAndFit(vsizer)
+
+        return pan
+
+    def _init_ctrls(self):
+
+        self.AddNewElement(self._oidic_pan())
+
+        if hasattr(self.scope, 'stackSettings'):
+            clp = afp.collapsingPane(self, caption='Z stepping ...')
+            self._seq_panel = seqdialog.seqPanel(clp, self.scope, mode='sequence')
+            clp.AddNewElement(self._seq_panel)
+            self.AddNewElement(clp)
+            self.seq_pan = clp
+
+    def on_go(self, event=None):
+
+        self.scope.oidic = oidic.OIDICAcquisition(self.scope)
+
+        self.scope.oidic.start()
+
+    def on_stop(self, event=None):
+        self.scope.oidic.finish()
+
+    def set_acquisition_four(self, event=None):
+        # Four images per OIDIC acqusition
+        pass
+
+    def set_acquisition_six(self, event=None):
+        # Six images per OIDIC acqusition
+        pass
+
+    def set_sample(self, event=None):
+        # We're imaging a sample
+        pass
+
+    def set_background(self, event=None):
+        # We're imaging background
+        pass
+
+    def toggle_z_stepped(self, event=None):
+        # Display the z-stepping panel if we're z-stepping
+        if self.z_stepped.GetValue():
+            if self.seq_pan.folded:
+                self.seq_pan.OnFold()
+        else:
+            if not self.seq_pan.folded:
+                self.seq_pan.OnFold()

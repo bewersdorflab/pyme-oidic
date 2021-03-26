@@ -60,6 +60,20 @@ def pz(scope):
     scope.piFoc = opr.generate_offset_piezo_server(opr.TargetOwningOffsetPiezo)(scope._piFoc)
     scope.register_piezo(scope.piFoc, 'z', needCamRestart=False)
 
+@init_hardware('Liquid Crystals')
+def liquid_crystals(scope):
+    from PYME.Acquire.Hardware.ARCoptix import lcdriver
+
+    scope.liquid_crystals = lcdriver.LCDriver()
+    # TODO: Do I need a close() function?
+
+@init_gui('OIDIC')
+def action_manager(MainFrame, scope):
+    from oidic.pymeacquire_modules import oidic_panel
+    
+    ap = oidic_panel.OIDICPanel(MainFrame, scope)
+    MainFrame.aqPanels.append((ap, 'OIDIC'))
+
 
 joinBGInit() 
 

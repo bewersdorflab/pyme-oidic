@@ -11,12 +11,12 @@
 # example you might call your repository directory 'pyme-plugin' but the
 # directory inside of it which stores all of your installable python code should
 # be called 'pyme_plugin'.
-PACKAGE_NAME = 'package_name'
+PACKAGE_NAME = 'oidic'
 # Set your version, as a string. Something like YY.MM.DD works well here
 PACKAGE_VERSION = '00.00.00'
 # Include a short description of your package. This might eventually get
 # displayed in e.g. Anaconda cloud if you build/upload packages, etc.
-PACKAGE_DESCRIPTION = 'What your plugin does'
+PACKAGE_DESCRIPTION = 'Controls for OIDIC microscopy.'
 
 # -------- If you filled in everything up to here you should be set ------------
 
