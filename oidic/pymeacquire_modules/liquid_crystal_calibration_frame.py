@@ -4,24 +4,28 @@ import wx
 import matplotlib
 
 class LCCalibrationFrame(wx.Frame):
-    def __init__(self, scope):
-        wx.Frame.__init__(self, None, title="OIDIC Liquid Crystal Calibration")
+    def __init__(self, parent, scope, crystals):
+        wx.Frame.__init__(self, parent, title="OIDIC Liquid Crystal Calibration")
         
         self.scope = scope
 
-        self.volts, self.ret = liquid_crystal_calibration.load_calibration()
+        self.lc_cal = liquid_crystal_calibration.LCCalbiration(scope, crystals)
 
         self.wavelength = 546.0  # optimal wavelength for prisms (nm)
         self.bias = 0.15  # bias introduced by variable retarder (multiple of lambda)
 
-        self.dir0_min = 2.7  # minimum voltage value for first shear direction (V)
-        self.dir1_min = 0.0  # minimum voltage value for second shear direction (V)
+        self._init_layout()
+        self.plot_calibrations(biases=False)  # We haven't calculated the baises yet
 
     def _init_layout(self):
         vsizer = wx.BoxSizer(wx.VERTICAL)
         vsizer.Add(self._init_plots(), 0, wx.ALL | wx.EXPAND)
 
         self.SetSizerAndFit(vsizer)
+
+    def _init_ctrls(self):
+        # Panel containing wavelength, bias, voltages
+        pass
 
     def _init_plots(self):
         """Initialize the plots to show ret vs. volts for two OIDIC shear directions.
@@ -33,14 +37,16 @@ class LCCalibrationFrame(wx.Frame):
 
         return plot_panel
     
-    def plot_calibrations(self):
+    def plot_calibrations(self, biases=True):
         # Clear the axes
         self.dir0.clear()
         self.dir1.clear()
 
         # Plot the calibration curves
-        self.dir0.plot(self.volts, self.ret, c='k')
-        self.dir1.plot(self.volts, self.ret, c='k')
+        self.dir0.plot(self.lc_cal.volts, self.lc_cal.ret, c='k')
+        self.dir1.plot(self.lc_cal.volts, self.lc_cal.ret, c='k')
+        self.dir0.set_aspect('equal')
+        self.dir1.set_aspect('equal')
 
         # Label the axes
         self.dir0.set_xlabel('Volts')
@@ -48,12 +54,13 @@ class LCCalibrationFrame(wx.Frame):
         self.dir1.set_ylabel('Volts')
         self.dir1.set_ylabel('Normalized wavelength')
 
-        # Plot the locations of the minimum voltages in each direction
-        self.dir0.scatter(self.dir0_min, interpolate_volts(self.dir0_min, self.volts, self.ret),
-                          s=80, facecolors='none', edgecolors='r')
-        self.dir1.scatter(self.dir1_min, interpolate_volts(self.dir1_min, self.volts, self.ret),
-                          s=80, facecolors='none', edgecolors='r')
+        if biases:
+            # Plot the locations of the minimum voltages in each direction
+            self.dir0.scatter(self.lc_cal.get_dir0_min_volts(), 
+                            self.lc_cal.get_dir0_min_ret(),
+                            s=80, facecolors='none', edgecolors='r')
+            self.dir1.scatter(self.lc_cal.get_dir1_min_volts(), 
+                            self.lc_cal.get_dir1_min_ret(),
+                            s=80, facecolors='none', edgecolors='r')
 
-        # Plot the locations of +/- bias (c='m')
-        self.dir0.scatter(self.dir0_min+self.bias, interpolate_volts(self.dir0_min, self.volts, self.ret),
-                          s=80, facecolors='none', edgecolors='r')
+            # Plot the locations of +/- bias

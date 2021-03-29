@@ -11,8 +11,7 @@ M. Shribak, K. G. Larkin, and D. Biggs, “Mapping optical path length and image
 3. `python setup.py develop`
 4. Add the path to your liquid crystal calibration file under 
    `OIDIC-liquid_crystal_cal_file` in `~/.PYME/config.yaml`.
-5. Set `OIDIC-liquid_crystal_zero_bias_voltage0` in in `~/.PYME/config.yaml`.
-6. If `xlrd` is not installed, run `conda install xlrd`.
+5. If `xlrd` is not installed, run `conda install xlrd`.
 
 ## Usage
 1. Navigate to the `pyme-oidic` directory.
