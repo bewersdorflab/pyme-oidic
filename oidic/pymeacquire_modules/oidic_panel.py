@@ -14,6 +14,8 @@ class OIDICPanel(afp.foldingPane):
         afp.foldingPane.__init__(self, parent, caption='OIDIC', **kwargs)
         
         self.scope=scope
+        self._images_per_acquisition = 6
+        self._background_image = False
 
         if hasattr(self.scope, 'stackSettings'):
             # Keep track of this for toggling purposes
@@ -101,7 +103,9 @@ class OIDICPanel(afp.foldingPane):
 
     def on_go(self, event=None):
 
-        self.scope.oidic = oidic.OIDICAcquisition(self.scope)
+        self.scope.oidic = oidic.OIDICAcquisition(self.scope,
+                                                  images_per_acquisition=self._images_per_acquisition,
+                                                  background_image=self._background_image)
 
         self.scope.oidic.start()
 
@@ -110,19 +114,19 @@ class OIDICPanel(afp.foldingPane):
 
     def set_acquisition_four(self, event=None):
         # Four images per OIDIC acqusition
-        pass
+        self._images_per_acquisition = 4
 
     def set_acquisition_six(self, event=None):
         # Six images per OIDIC acqusition
-        pass
+        self._images_per_acquisition = 6
 
     def set_sample(self, event=None):
         # We're imaging a sample
-        pass
+        self._background_image = False
 
     def set_background(self, event=None):
         # We're imaging background
-        pass
+        self._background_image = True
 
     def toggle_z_stepped(self, event=None):
         # Display the z-stepping panel if we're z-stepping

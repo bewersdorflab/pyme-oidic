@@ -1,1 +1,0 @@
-#/path/to/directory/containing/jinja2/templates/
