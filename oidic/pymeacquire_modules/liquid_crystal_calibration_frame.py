@@ -1,18 +1,14 @@
-from oidic import liquid_crystal_calibration
+from oidic import liquid_crystal
 
 import wx
 import matplotlib
 
 class LCCalibrationFrame(wx.Frame):
-    def __init__(self, parent, scope, crystals):
+    def __init__(self, parent, scope, lc_driver):
         wx.Frame.__init__(self, parent, title="OIDIC Liquid Crystal Calibration")
         
         self.scope = scope
-
-        self.lc_cal = liquid_crystal_calibration.LCCalbiration(scope, crystals)
-
-        self.wavelength = 546.0  # optimal wavelength for prisms (nm)
-        self.bias = 0.15  # bias introduced by variable retarder (multiple of lambda)
+        self.lc_cal = liquid_crystal.LCCalibration(scope, lc_driver)
 
         self._init_layout()
         self.plot_calibrations(biases=False)  # We haven't calculated the baises yet

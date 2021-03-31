@@ -1,22 +1,19 @@
 import PYME.config
+from PYME.Acquire.Hardware.ARCoptix import lcdriver
 
 import numpy as np
 import pandas as pd
 
-class LCCalbiration(object):
+class LCCalibration(object):
     def __init__(self, scope, lc_driver):
         """
-        Object that operates on and stores the liquid crystal calibration for 
-        the OIDIC microscope.
+        Object that operates on and stores the liquid crystal calibration and
+        controls for the OIDIC microscope.
 
         Parameters
         ----------
         scope : PYME.Acquire.microscope.microscope
             PYME microscope object
-        lc_driver: PYME.Acquire.Hardware.ARCoptix.lcdriver.LCDriver
-            Liquid crystal driver (can change from ARCoptix in the future).
-            Right now there is no default liquid crystal object like scope.cam
-            or scope.joystick (2021-03-19).
         """
         
         # attach scope and liquid crystal controller
@@ -45,6 +42,15 @@ class LCCalbiration(object):
             self.set_dir0_min_volts(2.7)
         if self._dir1_min_volts is None:
             self.set_dir1_min_volts(2.7)
+
+        # Wavelength and bias parameters
+        # optimal wavelength for prisms (nm)
+        self.wavelength = PYME.config.get('OIDIC-lc_wavelength', None)
+        # bias introduced by variable retarder (multiple of lambda)
+        self.bias = PYME.config.get('OIDIC-lc_bias', None)
+
+        if self.wavelength = None:
+
 
     def load_calibration_file(self):
         """Load the OIDIC liquid crystal calibration curve.
@@ -80,6 +86,10 @@ class LCCalbiration(object):
     def interpolate_volts(self, vals):
         # Get a volts value from the interpolation curve based on ret
         return np.interp(vals,self.ret,self.volts)
+
+    def set_wavelength(self, wvl):
+        PYME.config.update_config({'OIDIC-lc_voltage_dir0_min': v})
+        self.wavelength = wvl
 
     def get_dir0_volts(self):
         # voltage value to set first shear direction (V)
