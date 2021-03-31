@@ -12,8 +12,8 @@ M. Shribak, K. G. Larkin, and D. Biggs, “Mapping optical path length and image
 4. Add the path to your liquid crystal calibration file under 
    `OIDIC-liquid_crystal_cal_file` in `~/.PYME/config.yaml`.
 5. If `xlrd` is not installed, run `conda install xlrd`.
+6. Modify `init_oidic.py` to point to the correct COM ports/devices on your
+   computer and copy to `~/.PYME/init_scripts`.
 
 ## Usage
-1. Navigate to the `pyme-oidic` directory.
-2. `cd oidic`
-3. `pymeacquire -i init_oidic.py`
+`pymeacquire -i init_oidic.py`

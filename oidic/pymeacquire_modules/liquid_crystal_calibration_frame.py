@@ -46,9 +46,9 @@ class LCCalibrationFrame(wx.Frame):
 
         # Label the axes
         self.dir0.set_xlabel('Volts')
-        self.dir0.set_ylabel('Normalized wavelength')
+        self.dir0.set_ylabel('Path length shift as fraction of central wavelength')
         self.dir1.set_ylabel('Volts')
-        self.dir1.set_ylabel('Normalized wavelength')
+        self.dir1.set_ylabel('Path length shift as fraction of central wavelength')
 
         if biases:
             # Plot the locations of the minimum voltages in each direction

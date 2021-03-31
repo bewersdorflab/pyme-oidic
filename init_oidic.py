@@ -63,8 +63,10 @@ def pz(scope):
 @init_hardware('Liquid Crystals')
 def liquid_crystals(scope):
     from PYME.Acquire.Hardware.ARCoptix import lcdriver
+    from oidic import liquid_crystal_calibration
 
     scope.liquid_crystals = lcdriver.LCDriver()
+    scope.channel_settings = liquid_crystal_calibration.LCCalibration()
     # TODO: Do I need a close() function?
 
 @init_gui('OIDIC')
