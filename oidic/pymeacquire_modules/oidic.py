@@ -22,7 +22,7 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
         pass
 
     def set_c(self, c_idx):
-        pass
+        self.scope.channel_settings.set_c(c_idx)
 
     def _init_t(self, time_settings):
         pass
