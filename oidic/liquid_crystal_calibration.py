@@ -5,6 +5,7 @@ from PYME.IO import MetaDataHandler
 import numpy as np
 import pandas as pd
 import yaml
+import os
 
 import logging
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ config_keys = ['lc_cal_file',           # xls file containing path length shift 
                'lc_bias',               # bias shift
                'wavelength',            # central wavelength, prism-specific rather than lc-specific
                'shear_distance']        # shear distance of prism
-config_defaults = [None, 'mbl', 1.0, 8.0, 2.7, 2.7, 255.0, 546.0]  # default values for config_keys, respectively
+config_defaults = [None, 'mbl', 1.0, 8.0, 2.7, 2.7, 0.15, 546.0, 255.0]  # default values for config_keys, respectively
 
 if not os.path.isfile(config_file):
     try:
@@ -46,18 +47,22 @@ class LCCalibration(object):
         self.lc_driver = scope.lc_driver
         self._num_channels = 6
 
-        # Load the calibration file
-        self.volts, self.ret = self.load_calibration_file()
-
         # see if we've established an OIDIC dictionary
-        self._oidic_config = yaml.safe_load(config_file)
+        with open(config_file,'r') as config_data:
+            try:
+                self._oidic_config = yaml.safe_load(config_data)
+            except:
+                self._oidic_config = {}
 
         # Set defaults
         for k, v in zip(config_keys, config_defaults):
             if k in self._oidic_config:
-                self.__setattr__('_'+k,self._oidic_config.get('k'))
+                self.__setattr__('_'+k,self._oidic_config.get(k))
             else:
                 self.__setattr__('_'+k,v)
+
+        # Load the calibration file
+        self.volts, self.ret = self.load_calibration_file()
 
         # Establish and zero out the minus and plus voltages
         self.populate_bias_voltages()
@@ -80,7 +85,7 @@ class LCCalibration(object):
         # on the fly for plotting in the liquid crystal calibration GUI
         # that we don't need at all in the saved liquid crystal properties
         # dictionary
-        self.__getattribute__('_'+k)
+        return self.__getattribute__('_'+k)
 
     def set_num_channels(self, n):
         if ((n == 4) or (n == 6)):
@@ -90,12 +95,12 @@ class LCCalibration(object):
 
     def provide_channel_metadata(self):
         try:
-            mdh.setEntry('OIDIC.Bias', self._lc_bias)
-            mdh.setEntry('OIDIC.Wavelength', self._wavelength)
-            mdh.setEntry('OIDIC.LCVoltageDir0', self._lc_voltage_dir0)
-            mdh.setEntry('OIDIC.LCVoltageDir1', self._lc_voltage_dir1)
-            mdh.setEntry('OIDIC.LCVoltageDir0Zero', self._lc_voltage_dir0_zero)
-            mdh.setEntry('OIDIC.LCVoltageDir1Zero', self._lc_voltage_dir1_zero)
+            self.mdh.setEntry('OIDIC.Bias', self._lc_bias)
+            self.mdh.setEntry('OIDIC.Wavelength', self._wavelength)
+            self.mdh.setEntry('OIDIC.LCVoltageDir0', self._lc_voltage_dir0)
+            self.mdh.setEntry('OIDIC.LCVoltageDir1', self._lc_voltage_dir1)
+            self.mdh.setEntry('OIDIC.LCVoltageDir0Zero', self._lc_voltage_dir0_zero)
+            self.mdh.setEntry('OIDIC.LCVoltageDir1Zero', self._lc_voltage_dir1_zero)
         except:
             logger.exception('Error writing liquid crystal metadata.')
 
@@ -114,7 +119,7 @@ class LCCalibration(object):
         calibration_file = self._lc_cal_file
         if calibration_file is None:
             raise AttributeError('Please configure a liquid crystal calibration file' \
-                                    ' under OIDIC-liquid_crystal_cal_file in' \
+                                    ' under lc_cal_file in' \
                                     ' ~/.PYME/oidic_config.yaml.')
 
         calibration_file_source = self._lc_cal_file_source

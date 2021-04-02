@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class OIDICAcquisitonPanel(afp.foldingPane):
+class OIDICAcquisitionPanel(afp.foldingPane):
     def __init__(self, parent, scope, **kwargs):
         afp.foldingPane.__init__(self, parent, caption='OIDIC', **kwargs)
         
@@ -78,13 +78,13 @@ class OIDICAcquisitonPanel(afp.foldingPane):
 
         # Go/stop buttons
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.b_go = wx.Button(self, -1, 'Acquire Stack')
+        self.b_go = wx.Button(pan, -1, 'Acquire Stack')
         self.b_go.Bind(wx.EVT_BUTTON, self.on_go)
         hsizer.Add(self.b_go, 0, wx.ALL, 2)
-        self.b_stop = wx.Button(self, -1, 'Stop')
+        self.b_stop = wx.Button(pan, -1, 'Stop')
         self.b_stop.Disable()
         self.b_stop.Bind(wx.EVT_BUTTON, self.on_stop)
-        hsizer.Add(self.bStop, 0, wx.ALL, 2)
+        hsizer.Add(self.b_stop, 0, wx.ALL, 2)
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
 
         pan.SetSizerAndFit(vsizer)

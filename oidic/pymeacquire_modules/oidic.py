@@ -1,5 +1,6 @@
 from PYME.Acquire import xyztc
 
+import numpy as np
 import time
 
 class OIDICAcquisition(xyztc.XYZTCAcquisition):
@@ -41,7 +42,7 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
     def on_frame(self, sender, frameData, **kwargs):
         # Overload xyztc frame data to do image averaging
         if self.images_to_average > 1:
-            if self.average_num = 0:
+            if self.average_num == 0:
                 self.frame_data = np.zeros_like(frameData)
 
             if self.average_num < self.images_to_average:
