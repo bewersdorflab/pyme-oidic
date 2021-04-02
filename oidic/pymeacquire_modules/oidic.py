@@ -15,7 +15,6 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
                                         time_settings, channel_settings, backend)
 
         # Set some metadata
-        self.storage.mdh['NumImages'] = images_per_acquisition
         self.storage.mdh['BackgroundImage'] = background_image
 
     def _init_c(self, channel_settings):

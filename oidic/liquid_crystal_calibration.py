@@ -78,6 +78,12 @@ class LCCalibration(object):
         assert ((self._num_channels == 4) or (self._num_channels == 6))
         return self._num_channels
 
+    def set_num_channels(self, n):
+        if ((n == 4) or (n == 6)):
+            self._num_channels = n
+        else:
+            raise RuntimeError('Please choose the number of channels as 4 or 6.')
+
     def provide_channel_metadata(self):
         try:
             mdh.setEntry('OIDIC.Bias', self._lc_bias)
@@ -86,6 +92,7 @@ class LCCalibration(object):
             mdh.setEntry('OIDIC.LCVoltageDir1', self._lc_voltage_dir1)
             mdh.setEntry('OIDIC.LCVoltageDir0Zero', self._lc_voltage_dir0_zero)
             mdh.setEntry('OIDIC.LCVoltageDir1Zero', self._lc_voltage_dir1_zero)
+            mdh.setEntry('NumChannels', self.num_channels)
         except:
             logger.exception('Error writing liquid crystal metadata.')
 
@@ -195,6 +202,9 @@ class LCCalibration(object):
         """
         if (not self._chan0) or (not self._chan1):
             raise RuntimeError('Please call populate_chan_voltages first.')
+
+        if c_idx < 0:
+            raise RuntimeError('What are you doing???')
 
         if not (c_idx < self.num_channels):
             raise RuntimeError(f"{c_idx} is larger than {self.num_channels-1}")

@@ -14,7 +14,6 @@ class OIDICPanel(afp.foldingPane):
         afp.foldingPane.__init__(self, parent, caption='OIDIC', **kwargs)
         
         self.scope=scope
-        self._images_per_acquisition = 6
         self._background_image = False
 
         if hasattr(self.scope, 'stackSettings'):
@@ -86,6 +85,17 @@ class OIDICPanel(afp.foldingPane):
         if not hasattr(self.scope, 'stackSettings'):
             self.z_stepped.Disable()
 
+        # Go/stop buttons
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.b_go = wx.Button(self, -1, 'Acquire Stack')
+        self.b_go.Bind(wx.EVT_BUTTON, self.on_go)
+        hsizer.Add(self.b_go, 0, wx.ALL, 2)
+        self.b_stop = wx.Button(self, -1, 'Stop')
+        self.b_stop.Disable()
+        self.b_stop.Bind(wx.EVT_BUTTON, self.on_stop)
+        hsizer.Add(self.bStop, 0, wx.ALL, 2)
+        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
+
         pan.SetSizerAndFit(vsizer)
 
         return pan
@@ -104,21 +114,26 @@ class OIDICPanel(afp.foldingPane):
     def on_go(self, event=None):
 
         self.scope.oidic = oidic.OIDICAcquisition(self.scope,
-                                                  images_per_acquisition=self._images_per_acquisition,
                                                   background_image=self._background_image)
 
         self.scope.oidic.start()
 
+        self.b_go.Disable()
+        self.b_stop.Enable()
+
     def on_stop(self, event=None):
         self.scope.oidic.finish()
 
+        self.b_go.Enable()
+        self.b_stop.Disable()
+
     def set_acquisition_four(self, event=None):
         # Four images per OIDIC acqusition
-        self._images_per_acquisition = 4
+        self.scope.channel_settings.set_num_channels(4)
 
     def set_acquisition_six(self, event=None):
         # Six images per OIDIC acqusition
-        self._images_per_acquisition = 6
+        self.scope.channel_settings.set_num_channels(6)
 
     def set_sample(self, event=None):
         # We're imaging a sample
