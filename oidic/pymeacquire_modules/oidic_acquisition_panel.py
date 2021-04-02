@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class OIDICPanel(afp.foldingPane):
+class OIDICAcquisitonPanel(afp.foldingPane):
     def __init__(self, parent, scope, **kwargs):
         afp.foldingPane.__init__(self, parent, caption='OIDIC', **kwargs)
         
@@ -41,10 +41,8 @@ class OIDICPanel(afp.foldingPane):
         # Sample or background image?
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.sample = wx.RadioButton(pan, -1, 'Sample', style=wx.RB_GROUP)
-        self.sample.Bind(wx.EVT_RADIOBUTTON, self.set_sample)
         hsizer.Add(self.sample, 0, wx.ALL | wx.EXPAND, 2)
         self.background = wx.RadioButton(pan, -1, 'Background')
-        self.background.Bind(wx.EVT_RADIOBUTTON, self.set_background)
         hsizer.Add(self.background, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
         self.sample.SetValue(True)  # enable sample acqusition by default (why?)
@@ -60,15 +58,8 @@ class OIDICPanel(afp.foldingPane):
         # image averaging decides how many frames to average over per capture
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         hsizer.Add(wx.StaticText(pan, -1, "# images to average:"), 0, wx.ALL, 2)
-        self.capture_delay = wx.TextCtrl(pan, -1, value='1')
-        hsizer.Add(self.capture_delay, 0, wx.ALL, 2)
-        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
-
-        # shear distance of the external DIC prism
-        hsizer = wx.BoxSizer(wx.HORIZONTAL)
-        hsizer.Add(wx.StaticText(pan, -1, "Shear distance (nm):"), 0, wx.ALL, 2)
-        self.capture_delay = wx.TextCtrl(pan, -1, value='255')
-        hsizer.Add(self.capture_delay, 0, wx.ALL, 2)
+        self.images_to_average = wx.TextCtrl(pan, -1, value='1')
+        hsizer.Add(self.images_to_average, 0, wx.ALL, 2)
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
 
         # Z-stepped?
@@ -114,7 +105,9 @@ class OIDICPanel(afp.foldingPane):
     def on_go(self, event=None):
 
         self.scope.oidic = oidic.OIDICAcquisition(self.scope,
-                                                  background_image=self._background_image)
+                                                  capture_delay=float(self.capture_delay.GetValue()),
+                                                  images_to_average=float(self.images_to_average.GetValue()),
+                                                  background_image=bool(self.background.GetValue()))
 
         self.scope.oidic.start()
 
@@ -134,14 +127,6 @@ class OIDICPanel(afp.foldingPane):
     def set_acquisition_six(self, event=None):
         # Six images per OIDIC acqusition
         self.scope.channel_settings.set_num_channels(6)
-
-    def set_sample(self, event=None):
-        # We're imaging a sample
-        self._background_image = False
-
-    def set_background(self, event=None):
-        # We're imaging background
-        self._background_image = True
 
     def toggle_z_stepped(self, event=None):
         # Display the z-stepping panel if we're z-stepping

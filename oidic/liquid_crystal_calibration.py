@@ -17,7 +17,8 @@ config_keys = ['lc_cal_file',           # xls file containing path length shift 
                'lc_voltage_dir0_zero',  # zero-bias voltage in direction 0
                'lc_voltage_dir1_zero',  # zero-bias voltage in direction 1
                'lc_bias',               # bias shift
-               'wavelength']            # central wavelength, prism-specific rather than lc-specific
+               'wavelength',            # central wavelength, prism-specific rather than lc-specific
+               'shear_distance']        # shear distance of prism
 config_defaults = [None, 'mbl', 1.0, 8.0, 2.7, 2.7, 255.0, 546.0]  # default values for config_keys, respectively
 
 if not os.path.isfile(config_file):
@@ -59,14 +60,10 @@ class LCCalibration(object):
                 self.__setattr__('_'+k,v)
 
         # Establish and zero out the minus and plus voltages
-        self._lc_voltage_dir0_zero_minus = 0
-        self._lc_voltage_dir0_zero_plus = 0
-        self._lc_voltage_dir1_zero_minus = 0
-        self._lc_voltage_dir1_zero_plus = 0
+        self.populate_bias_voltages()
 
         # Empty lc channel voltages
-        self._chan0 = []  # shear direction
-        self._chan1 = []  # bias
+        self.populate_chan_voltages()
 
         # Channel metadata
         self.mdh = MetaDataHandler.NestedClassMDHandler()
@@ -77,6 +74,13 @@ class LCCalibration(object):
         # We can only do 4 or 6 DIC images per OIDIC image
         assert ((self._num_channels == 4) or (self._num_channels == 6))
         return self._num_channels
+
+    def get(self, k):
+        # This may seem weird but we need some of the attributes we create
+        # on the fly for plotting in the liquid crystal calibration GUI
+        # that we don't need at all in the saved liquid crystal properties
+        # dictionary
+        self.__getattribute__('_'+k)
 
     def set_num_channels(self, n):
         if ((n == 4) or (n == 6)):
@@ -92,7 +96,6 @@ class LCCalibration(object):
             mdh.setEntry('OIDIC.LCVoltageDir1', self._lc_voltage_dir1)
             mdh.setEntry('OIDIC.LCVoltageDir0Zero', self._lc_voltage_dir0_zero)
             mdh.setEntry('OIDIC.LCVoltageDir1Zero', self._lc_voltage_dir1_zero)
-            mdh.setEntry('NumChannels', self.num_channels)
         except:
             logger.exception('Error writing liquid crystal metadata.')
 
@@ -166,17 +169,26 @@ class LCCalibration(object):
         self._lc_voltage_dir1_zero_plus = 0
 
         if self._lc_bias and self._lc_voltage_dir0_zero:
-            self._lc_voltage_dir0_zero_minus = self.interpolate_volts(self.interpolate_ret(self._lc_voltage_dir0_zero) - self._lc_bias)
-            self._lc_voltage_dir0_zero_plus = self.interpolate_volts(self.interpolate_ret(self._lc_voltage_dir0_zero) + self._lc_bias)
+            self._lc_ret_dir0_zero = self.interpolate_ret(self._lc_voltage_dir0_zero)
+            self._lc_ret_dir0_zero_minus = self._lc_ret_dir0_zero - self._lc_bias
+            self._lc_ret_dir0_zero_plus = self._lc_ret_dir0_zero + self._lc_bias
+            self._lc_voltage_dir0_zero_minus = self.interpolate_volts(self._lc_ret_dir0_zero_minus)
+            self._lc_voltage_dir0_zero_plus = self.interpolate_volts(self._lc_ret_dir0_zero_plus)
 
         if self._lc_bias and self._lc_voltage_dir1_zero:
-            self._lc_voltage_dir1_zero_minus = self.interpolate_volts(self.interpolate_ret(self._lc_voltage_dir1_zero) - self._lc_bias)
-            self._lc_voltage_dir1_zero_plus = self.interpolate_volts(self.interpolate_ret(self._lc_voltage_dir1_zero) + self._lc_bias)
+            self._lc_ret_dir1_zero = self.interpolate_ret(self._lc_voltage_dir1_zero)
+            self._lc_ret_dir1_zero_minus = self._lc_ret_dir1_zero - self._lc_bias
+            self._lc_ret_dir1_zero_plus = self._lc_ret_dir1_zero + self._lc_bias
+            self._lc_voltage_dir1_zero_minus = self.interpolate_volts(self._lc_ret_dir1_zero_minus)
+            self._lc_voltage_dir1_zero_plus = self.interpolate_volts(self._lc_ret_dir1_zero_plus)
 
     def populate_chan_voltages(self):
         """
         Set liquid crystal voltages per imaging channel (4 or 6).
         """
+        self._chan0 = []  # shear direction
+        self._chan1 = []  # bias
+
         if self.num_channels == 4:
             self._chan0 = [self._lc_voltage_dir0,self._lc_voltage_dir0,
                            self._lc_voltage_dir1,self._lc_voltage_dir1]
@@ -211,6 +223,37 @@ class LCCalibration(object):
 
         self.lc_driver.set_dac_voltage(self._chan0[c_idx], 0)
         self.lc_driver.set_dac_voltage(self._chan1[c_idx], 1)
+
+    def set_bias(self, bias):
+        self._lc_bias = bias
+        self.populate_bias_voltages()
+        self.populate_chan_voltages()
+
+    def set_wavelength(self, wavelength):
+        self._wavelength = wavelength
+
+    def set_shear_distance(self, shear_distance):
+        self._shear_distance = shear_distance
+
+    def set_lc_voltage_dir0(self, v):
+        self._lc_voltage_dir0 = v
+        self.populate_bias_voltages()
+        self.populate_chan_voltages()
+
+    def set_lc_voltage_dir1(self, v):
+        self._lc_voltage_dir1 = v
+        self.populate_bias_voltages()
+        self.populate_chan_voltages()
+
+    def set_lc_voltage_dir0_zero(self, v):
+        self._lc_voltage_dir0_zero = v
+        self.populate_bias_voltages()
+        self.populate_chan_voltages()
+
+    def set_lc_voltage_dir1_zero(self, v):
+        self._lc_voltage_dir1_zero = v
+        self.populate_bias_voltages()
+        self.populate_chan_voltages()
 
     def find_dir1_zero_bias(self):
         """

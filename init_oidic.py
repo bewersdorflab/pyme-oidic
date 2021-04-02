@@ -71,19 +71,19 @@ def liquid_crystals(scope):
 
 @init_gui('OIDIC')
 def action_manager(MainFrame, scope):
-    from oidic.pymeacquire_modules import oidic_panel
+    from oidic.pymeacquire_modules import oidic_acquisition_panel
     
     # OIDIC acquistion panel
-    ap = oidic_panel.OIDICPanel(MainFrame, scope)
+    ap = oidic_acquisition_panel.OIDICAcquisitionPanel(MainFrame, scope)
     MainFrame.aqPanels.append((ap, 'OIDIC'))
 
     # Menu controls for liquid crystal calibration
-    def launch_lc_cal_frame(event=None):
-        from oidic.pymeacquire_modules import liquid_crystal_calibration_frame
-        frame = liquid_crystal_calibration_frame.LCCalibrationFrame(None,scope,scope.liquid_crystals)
+    def launch_cal_frame(event=None):
+        from oidic.pymeacquire_modules import oidic_calibration_frame
+        frame = oidic_calibration_frame.OIDICCalibrationFrame(None,scope,scope.lc_driver)
         frame.Show()
     
-    MainFrame.AddMenuItem('OIDIC', 'Liquid Crystal Calibration', launch_lc_cal_frame)
+    MainFrame.AddMenuItem('OIDIC', 'Calibration', launch_cal_frame)
 
 
 joinBGInit() 
