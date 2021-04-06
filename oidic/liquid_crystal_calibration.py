@@ -161,9 +161,14 @@ class LCCalibration(object):
         return np.interp(vals,self.ret,self.volts)
 
     def initialize_calibration(self):
-        # Set to minimum bias position (assumes user has manipulated condenser
-        # polarizer to bias 0 for current sample)
-        # Note we do not call set_c here in case we are in the self.num_channels==4 case
+        """
+        Set to minimum bias position (assumes user has manipulated condenser
+        polarizer to bias 0 for current sample) in shear direction 0. Assumes
+        user will follow by setting physical optical components to match before
+        hitting run calibration.
+
+        Note we do not call set_c here in case we are in the self.num_channels==4 case
+        """
         self.lc_driver.set_dac_voltage(self._lc_voltage_dir0, 0)
         self.lc_driver.set_dac_voltage(self._lc_voltage_dir0_zero, 1)
 
@@ -264,5 +269,5 @@ class LCCalibration(object):
         """
         Find the zero bias voltage in dir1 based on set dir0.
         """
-        pass
+        
 

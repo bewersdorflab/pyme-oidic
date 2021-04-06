@@ -39,8 +39,8 @@ class OIDICCalibrationFrame(wx.Frame):
         # shear distance of the external DIC prism
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         hsizer.Add(wx.StaticText(pan, -1, "Shear distance (nm):"), 0, wx.ALL, 2)
-        self.shear = wx.TextCtrl(pan, -1, value=str(self.lc_calibration.get('shear_distance')))
-        hsizer.Add(self.shear, 0, wx.ALL, 2)
+        self.shear_distance = wx.TextCtrl(pan, -1, value=str(self.lc_calibration.get('shear_distance')))
+        hsizer.Add(self.shear_distance, 0, wx.ALL, 2)
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
 
         # bias 
@@ -81,6 +81,9 @@ class OIDICCalibrationFrame(wx.Frame):
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
 
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.b_initialize = wx.Button(pan, -1, 'Initialize calibration')
+        self.b_initialize.Bind(wx.EVT_BUTTON, self.on_initialize)
+        hsizer.Add(self.b_initialize, 0, wx.ALL, 2)
         self.b_calibrate = wx.Button(pan, -1, 'Run calibration')
         self.b_calibrate.Bind(wx.EVT_BUTTON, self.on_calibrate)
         hsizer.Add(self.b_calibrate, 0, wx.ALL, 2)
@@ -128,5 +131,27 @@ class OIDICCalibrationFrame(wx.Frame):
 
             # Plot the locations of +/- bias
 
+    def on_initialize(self, event=None):
+        """
+        Set the OIDIC state to shear direction 0, zero bias
+        """
+        # Grab the latest and greatest voltages we need
+        self.lc_calibration.set_lc_voltage_dir0(float(self.voltage_dir0.GetValue()))
+        self.lc_calibration.set_lc_voltage_dir0_zero(float(self.voltage_dir0_zero.GetValue()))
+
+        # initialize
+        self.lc_calibration.initialize_calibration()
+
     def on_calibrate(self, event=None):
-        pass
+        # Grab the latest and greatest voltages/values we need
+        self.lc_calibration.set_lc_voltage_dir0(float(self.voltage_dir0.GetValue()))
+        self.lc_calibration.set_lc_voltage_dir0_zero(float(self.voltage_dir0_zero.GetValue()))
+        self.lc_calibration.set_lc_voltage_dir1(float(self.voltage_dir1.GetValue()))
+        self.lc_calibration.set_lc_voltage_dir1_zero(float(self.voltage_dir1_zero.GetValue()))
+        self.lc_calibration.set_bias(float(self.bias.GetValue()))
+
+        # We don't strictly need these for calibration but they are associated
+        self.lc_calibration.set_wavelength(float(self.wavelength.GetValue()))
+        self.lc_calibration.set_shear_distance(float(self.shear_distance.GetValue()))
+
+        
