@@ -47,6 +47,14 @@ class OIDICAcquisitionPanel(afp.foldingPane):
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
         self.sample.SetValue(True)  # enable sample acqusition by default (why?)
 
+        # bias (normalized to wavelength) applied to variable phase retarder
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer.Add(wx.StaticText(pan, -1, "Bias:"), 0, wx.ALL, 2)
+        self.bias = wx.TextCtrl(pan, -1, value='0.15')
+        self.bias.Bind(wx.EVT_KILL_FOCUS, self.on_bias_change)
+        hsizer.Add(self.bias, 0, wx.ALL, 2)
+        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
+
         # capture delay (ms) controls time between captures, a little longer
         # than the liquid crystal settling time
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -119,6 +127,9 @@ class OIDICAcquisitionPanel(afp.foldingPane):
 
         self.b_go.Enable()
         self.b_stop.Disable()
+
+    def on_bias_change(self, event=None):
+        self.scope.channel_settings.set_bias(float(self.bias.GetValue()))
 
     def set_acquisition_four(self, event=None):
         # Four images per OIDIC acqusition

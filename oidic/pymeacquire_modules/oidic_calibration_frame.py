@@ -43,13 +43,6 @@ class OIDICCalibrationFrame(wx.Frame):
         hsizer.Add(self.shear_distance, 0, wx.ALL, 2)
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
 
-        # bias 
-        hsizer = wx.BoxSizer(wx.HORIZONTAL)
-        hsizer.Add(wx.StaticText(pan, -1, "Bias:"), 0, wx.ALL, 2)
-        self.bias = wx.TextCtrl(pan, -1, value=str(self.lc_calibration.get('lc_bias')))
-        hsizer.Add(self.bias, 0, wx.ALL, 2)
-        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
-
         # TODO: Make the following collapsable?
 
         # shear direction 0 voltage
@@ -148,10 +141,10 @@ class OIDICCalibrationFrame(wx.Frame):
         self.lc_calibration.set_lc_voltage_dir0_zero(float(self.voltage_dir0_zero.GetValue()))
         self.lc_calibration.set_lc_voltage_dir1(float(self.voltage_dir1.GetValue()))
         self.lc_calibration.set_lc_voltage_dir1_zero(float(self.voltage_dir1_zero.GetValue()))
-        self.lc_calibration.set_bias(float(self.bias.GetValue()))
+        self.lc_calibration.set_bias(float(self.lc_calibration.get('lc_bias')))
 
         # We don't strictly need these for calibration but they are associated
         self.lc_calibration.set_wavelength(float(self.wavelength.GetValue()))
         self.lc_calibration.set_shear_distance(float(self.shear_distance.GetValue()))
 
-        
+        self.lc_calibration.find_dir1_zero_bias()

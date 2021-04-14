@@ -265,9 +265,48 @@ class LCCalibration(object):
         self.populate_bias_voltages()
         self.populate_chan_voltages()
 
-    def find_dir1_zero_bias(self):
+    def find_dir1_zero_bias(self, time_delay=0.3):
         """
         Find the zero bias voltage in dir1 based on set dir0.
-        """
-        
 
+        Parameters
+        ----------
+        time_delay : float
+            Time to wait after applying lc_voltage. 0.3 s is usually
+            safe, but this can be optionally modified.
+        """
+
+        import time
+        
+        # We should already be initialized but double check
+        self.initialize_calibration()
+        # Grab this mean as a sanity check
+        dir0_zero_mean = scope.frameWrangler.currentFrame.mean()
+
+        # Switch to the other shear direction and grid search for the minimum mean
+        self.lc_driver.set_dac_voltage(self._lc_voltage_dir1, 1)
+        volts_to_check = np.linspace(self._lc_voltage_dir0_zero-1.5, self._lc_voltage_dir0_zero+1.5, 10)
+        means = np.zeros_like(volts_to_check)
+        for i, v in enumerate(volts_to_check):
+            self.lc_driver.set_dac_voltage(v, 0)
+            time.sleep(time_delay)
+            means[i] = scope.frameWrangler.currentFrame.mean()
+
+        # Fit a quadratic to find the minimum voltage
+        res = np.polyfit(volts_to_check,means,2)
+        min_v = -res[1]/(2*res[0])  # should be analytic, single zero
+
+        # record the minimum voltage
+        self.set_lc_voltage_dir1_zero(min_v)
+
+        # Grab the mean values
+        self.lc_driver.set_dac_voltage(min_v, 0)
+        time.sleep(time_delay)
+        dir1_zero_mean = scope.frameWrangler.currentFrame.mean()
+
+        # Alert the user to the mean values (should be equal)
+        dialog = wx.MessageDialog(None, 
+                                  f"Dir 0 Mean: {dir0_zero_mean}    "\
+                                  f"Dir 1 Mean: {dir1_zero_mean}", 
+                                  "Mean values should be roughly equivalent", wx.OK)
+        dialog.ShowModal()
