@@ -55,14 +55,6 @@ class OIDICAcquisitionPanel(afp.foldingPane):
         hsizer.Add(self.bias, 0, wx.ALL, 2)
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
 
-        # capture delay (ms) controls time between captures, a little longer
-        # than the liquid crystal settling time
-        hsizer = wx.BoxSizer(wx.HORIZONTAL)
-        hsizer.Add(wx.StaticText(pan, -1, "Capture delay (ms):"), 0, wx.ALL, 2)
-        self.capture_delay = wx.TextCtrl(pan, -1, value='300')
-        hsizer.Add(self.capture_delay, 0, wx.ALL, 2)
-        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
-
         # image averaging decides how many frames to average over per capture
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         hsizer.Add(wx.StaticText(pan, -1, "# images to average:"), 0, wx.ALL, 2)
@@ -113,7 +105,6 @@ class OIDICAcquisitionPanel(afp.foldingPane):
     def on_go(self, event=None):
 
         self.scope.oidic = oidic.OIDICAcquisition(self.scope,
-                                                  capture_delay=float(self.capture_delay.GetValue()),
                                                   images_to_average=float(self.images_to_average.GetValue()),
                                                   background_image=bool(self.background.GetValue()))
 

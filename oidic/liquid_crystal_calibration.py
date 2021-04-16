@@ -1,3 +1,6 @@
+import wx
+import time
+import matplotlib.pyplot as plt
 from PYME.config import user_config_dir, update_yaml_keys
 from PYME.Acquire.Hardware.ARCoptix import lcdriver
 from PYME.IO import MetaDataHandler
@@ -19,8 +22,9 @@ config_keys = ['lc_cal_file',           # xls file containing path length shift 
                'lc_voltage_dir1_zero',  # zero-bias voltage in direction 1
                'lc_bias',               # bias shift
                'wavelength',            # central wavelength, prism-specific rather than lc-specific
-               'shear_distance']        # shear distance of prism
-config_defaults = [None, 'mbl', 1.0, 8.0, 2.7, 2.7, 0.15, 546.0, 255.0]  # default values for config_keys, respectively
+               'shear_distance',        # shear distance of prism
+               'settling_time']         # settling time of the liquid crystals
+config_defaults = [None, 'mbl', 1.0, 8.0, 2.7, 2.7, 0.15, 546.0, 255.0, 0.3]  # default values for config_keys, respectively
 
 if not os.path.isfile(config_file):
     try:
@@ -30,7 +34,89 @@ if not os.path.isfile(config_file):
         #we might not be able to write to the home directory
         pass
 
-class LCCalibration(object):
+class LCCalibrator(object):
+    def __init__(self, scope):
+        """"
+        Liquid crystal calibration object.
+        """
+
+        self.scope = scope
+        if not (type(self.scope.channel_settings) == LCChannelSettings):
+            raise TypeError('LCCalibration type required for scope.channel_settings')
+        self.lc_ch_set = self.scope.channel_settings
+        self.volts_to_check = None
+        self.means = None
+        self.i = 0
+        self.num_calibrations = 10
+
+        self.dir0_zero_mean = 0
+
+    def run(self):
+        # We should already be initialized but double check
+        self.lc_ch_set.initialize_calibration()
+        # Grab this mean as a sanity check
+        self.dir0_zero_mean = self.scope.frameWrangler.currentFrame.mean()
+
+        # Switch to the other shear direction and grid search for the minimum mean
+        self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 1)
+
+        self.volts_to_check = np.linspace(self.lc_ch_set._lc_voltage_dir0_zero-1.5, 
+                                          self.lc_ch_set._lc_voltage_dir0_zero+1.5, 
+                                          self.num_calibrations)
+        self.means = np.zeros_like(self.volts_to_check)
+        self.i = 0
+
+        self.scope.frameWrangler.stop()
+        self.scope.frameWrangler.onFrame.connect(self.on_frame)
+        self.scope.frameWrangler.start()
+
+    def on_frame(self, sender, frameData, **kwargs):
+        self.means[self.i] = frameData.mean()
+        
+        self.i += 1
+        if self.i >= self.num_calibrations:
+            self.scope.frameWrangler.stop()
+            self.scope.frameWrangler.onFrame.disconnect(self.on_frame)
+            self.scope.frameWrangler.start()
+            wx.CallAfter(self.on_done)
+        else:
+            self.scope.frameWrangler.stop()
+            #set new voltages
+            self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 0)
+            time.sleep(self.lc_ch_set._settling_time)
+            self.scope.frameWrangler.start()
+            # update_progress_bar()
+
+    def on_done(self):
+        # Fit a quadratic to find the minimum voltage
+        res = np.polyfit(self.volts_to_check,self.means,2)
+        min_v = -res[1]/(2*res[0])  # should be analytic, single zero
+
+        plt.figure()
+        plt.scatter(self.volts_to_check, self.means)
+        plt.plot(self.volts_to_check,np.poly1d(res)(self.volts_to_check))
+        plt.xlabel('Volts')
+        plt.ylabel('Image mean intensity')
+        plt.title('Voltage calibration')
+
+        # record the minimum voltage
+        self.lc_ch_set.set_lc_voltage_dir1_zero(min_v)
+
+        self.scope.frameWrangler.stop()
+        # Grab the mean values
+        self.lc_ch_set.lc_driver.set_dac_voltage(min_v, 0)
+        time.sleep(self.lc_ch_set._settling_time)
+        self.scope.frameWrangler.start()
+        dir1_zero_mean = self.scope.frameWrangler.currentFrame.mean()
+
+        # Alert the user to the mean values (should be equal)
+        dialog = wx.MessageDialog(None, 
+                                  f"Dir 0 Mean: {self.dir0_zero_mean}    "\
+                                  f"Dir 1 Mean: {dir1_zero_mean}", 
+                                  "Mean values should be roughly equivalent", wx.OK)
+        dialog.ShowModal()
+
+class LCChannelSettings(object):
     def __init__(self, scope):
         """
         Channel settings object that operates on and stores the liquid crystal 
@@ -71,7 +157,6 @@ class LCCalibration(object):
         self.populate_chan_voltages()
 
         # Channel metadata
-        self.mdh = MetaDataHandler.NestedClassMDHandler()
         MetaDataHandler.provideStartMetadata.append(self.provide_channel_metadata)
 
     @property
@@ -93,14 +178,15 @@ class LCCalibration(object):
         else:
             raise RuntimeError('Please choose the number of channels as 4 or 6.')
 
-    def provide_channel_metadata(self):
+    def provide_channel_metadata(self, mdh):
         try:
-            self.mdh.setEntry('OIDIC.Bias', self._lc_bias)
-            self.mdh.setEntry('OIDIC.Wavelength', self._wavelength)
-            self.mdh.setEntry('OIDIC.LCVoltageDir0', self._lc_voltage_dir0)
-            self.mdh.setEntry('OIDIC.LCVoltageDir1', self._lc_voltage_dir1)
-            self.mdh.setEntry('OIDIC.LCVoltageDir0Zero', self._lc_voltage_dir0_zero)
-            self.mdh.setEntry('OIDIC.LCVoltageDir1Zero', self._lc_voltage_dir1_zero)
+            mdh.setEntry('OIDIC.Bias', self._lc_bias)
+            mdh.setEntry('OIDIC.Wavelength', self._wavelength)
+            mdh.setEntry('OIDIC.SettlingTime', self._settling_time)
+            mdh.setEntry('OIDIC.LCVoltageDir0', self._lc_voltage_dir0)
+            mdh.setEntry('OIDIC.LCVoltageDir1', self._lc_voltage_dir1)
+            mdh.setEntry('OIDIC.LCVoltageDir0Zero', self._lc_voltage_dir0_zero)
+            mdh.setEntry('OIDIC.LCVoltageDir1Zero', self._lc_voltage_dir1_zero)
         except:
             logger.exception('Error writing liquid crystal metadata.')
 
@@ -265,48 +351,6 @@ class LCCalibration(object):
         self.populate_bias_voltages()
         self.populate_chan_voltages()
 
-    def find_dir1_zero_bias(self, time_delay=0.3):
-        """
-        Find the zero bias voltage in dir1 based on set dir0.
-
-        Parameters
-        ----------
-        time_delay : float
-            Time to wait after applying lc_voltage. 0.3 s is usually
-            safe, but this can be optionally modified.
-        """
-
-        import time
-        
-        # We should already be initialized but double check
-        self.initialize_calibration()
-        # Grab this mean as a sanity check
-        dir0_zero_mean = scope.frameWrangler.currentFrame.mean()
-
-        # Switch to the other shear direction and grid search for the minimum mean
-        self.lc_driver.set_dac_voltage(self._lc_voltage_dir1, 1)
-        volts_to_check = np.linspace(self._lc_voltage_dir0_zero-1.5, self._lc_voltage_dir0_zero+1.5, 10)
-        means = np.zeros_like(volts_to_check)
-        for i, v in enumerate(volts_to_check):
-            self.lc_driver.set_dac_voltage(v, 0)
-            time.sleep(time_delay)
-            means[i] = scope.frameWrangler.currentFrame.mean()
-
-        # Fit a quadratic to find the minimum voltage
-        res = np.polyfit(volts_to_check,means,2)
-        min_v = -res[1]/(2*res[0])  # should be analytic, single zero
-
-        # record the minimum voltage
-        self.set_lc_voltage_dir1_zero(min_v)
-
-        # Grab the mean values
-        self.lc_driver.set_dac_voltage(min_v, 0)
-        time.sleep(time_delay)
-        dir1_zero_mean = scope.frameWrangler.currentFrame.mean()
-
-        # Alert the user to the mean values (should be equal)
-        dialog = wx.MessageDialog(None, 
-                                  f"Dir 0 Mean: {dir0_zero_mean}    "\
-                                  f"Dir 1 Mean: {dir1_zero_mean}", 
-                                  "Mean values should be roughly equivalent", wx.OK)
-        dialog.ShowModal()
+    def set_delay(self, t):
+        # Expects time in ms
+        self._settling_time = t/1000.0 

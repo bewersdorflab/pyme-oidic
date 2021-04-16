@@ -66,7 +66,7 @@ def liquid_crystals(scope):
     from oidic import liquid_crystal_calibration
 
     scope.lc_driver = lcdriver.LCDriver()
-    scope.channel_settings = liquid_crystal_calibration.LCCalibration(scope)
+    scope.channel_settings = liquid_crystal_calibration.LCChannelSettings(scope)
     # TODO: Do I need a close() function?
 
 @init_gui('OIDIC')
@@ -80,7 +80,7 @@ def action_manager(MainFrame, scope):
     # Menu controls for liquid crystal calibration
     def launch_cal_frame(event=None):
         from oidic.pymeacquire_modules import oidic_calibration_frame
-        frame = oidic_calibration_frame.OIDICCalibrationFrame(None,scope,scope.lc_driver)
+        frame = oidic_calibration_frame.OIDICCalibrationFrame(None,scope)
         frame.Show()
     
     MainFrame.AddMenuItem('OIDIC', 'Calibration', launch_cal_frame)

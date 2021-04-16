@@ -6,14 +6,13 @@ import time
 class OIDICAcquisition(xyztc.XYZTCAcquisition):
     def __init__(self, scope, dim_order='XYCZT', stack_settings=None, 
                  time_settings=None, channel_settings=None, backend=xyztc.MemoryBackend,
-                 images_to_average=1, capture_delay=0.0, background_image=False):
+                 images_to_average=1, background_image=False):
         """Acqusition object for OIDIC microscopy.
 
         Parameters
         ----------
-        capture_delay : float, optional
-            Delay between images in milliseconds. Used to account for liquid crystal 
-            settling time.
+        images_to_average : int
+            Number of images to average for a single OIDIC channel.
         background_image : bool, optional
             Are we acquiring a sample (False) or a background (True) image, by default False
         """
@@ -35,9 +34,6 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
         # Set some metadata
         self.storage.mdh['BackgroundImage'] = background_image
         self.storage.mdh['NumChannels'] = self.channel_settings.num_channels
-        self.storage.mdh['CaptureDelay'] = capture_delay
-
-        self.capture_delay = capture_delay/1000.0  # convert to s for time.sleep
 
     def on_frame(self, sender, frameData, **kwargs):
         # Overload xyztc frame data to do image averaging
@@ -59,8 +55,10 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
         pass
 
     def set_c(self, c_idx):
+        self.scope.frameWrangler.stop()
         self.channel_settings.set_c(c_idx)
-        time.sleep(self.capture_delay)
+        time.sleep(self.channel_settings._settling_time)
+        self.scope.frameWrangler.start()
 
     def _init_t(self, time_settings):
         pass
