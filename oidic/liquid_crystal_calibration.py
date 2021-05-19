@@ -89,6 +89,9 @@ class LCCalibrator(object):
 
     def on_done(self):
         # Fit a quadratic to find the minimum voltage
+        print(self.volts_to_check)
+        print(self.means)
+        print(type(self.volts_to_check), type(self.means))
         res = np.polyfit(self.volts_to_check,self.means,2)
         min_v = -res[1]/(2*res[0])  # should be analytic, single zero
 
@@ -138,6 +141,7 @@ class LCChannelSettings(object):
             try:
                 self._oidic_config = yaml.safe_load(config_data)
             except:
+                logger.warning('Calibration file was not loaded successfully, defaulting to empty configuration.')
                 self._oidic_config = {}
 
         # Set defaults

@@ -162,5 +162,7 @@ class OIDICCalibrationFrame(wx.Frame):
 
         self.lc_calibrator.run()
 
+        self.plot_calibrations()
+
     def on_save(self, event=None):
         self.lc_ch_set.write_oidic_config()
