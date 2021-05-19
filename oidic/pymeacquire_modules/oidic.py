@@ -16,11 +16,11 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
         background_image : bool, optional
             Are we acquiring a sample (False) or a background (True) image, by default False
         """
-        xyztc.XYZTCAcquisition.__init__(self, scope, dim_order, stack_settings, 
-                                        time_settings, channel_settings, backend)
-
         if channel_settings is None:
             channel_settings = scope.channel_settings
+            
+        xyztc.XYZTCAcquisition.__init__(self, scope, dim_order, stack_settings, 
+                                        time_settings, channel_settings, backend)
 
         self.channel_settings = channel_settings
 

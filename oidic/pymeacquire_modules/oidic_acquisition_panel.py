@@ -72,6 +72,7 @@ class OIDICAcquisitionPanel(afp.foldingPane):
         hsizer.Add(self.z_stepped, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
         self.standard.SetValue(True)  # non z-stepped by default
+        self.scope.stackSettings.SetSeqLength(1)
 
         if not hasattr(self.scope, 'stackSettings'):
             self.z_stepped.Disable()
@@ -133,8 +134,12 @@ class OIDICAcquisitionPanel(afp.foldingPane):
     def toggle_z_stepped(self, event=None):
         # Display the z-stepping panel if we're z-stepping
         if self.z_stepped.GetValue():
+            self.scope.stackSettings.SetSeqLength(self._seq_length)
             if self.seq_pan.folded:
                 self.seq_pan.OnFold()
         else:
             if not self.seq_pan.folded:
                 self.seq_pan.OnFold()
+            # Save the current sequence length
+            self._seq_length = self.scope.stackSettings.GetSeqLength()
+            self.scope.stackSettings.SetSeqLength(1)

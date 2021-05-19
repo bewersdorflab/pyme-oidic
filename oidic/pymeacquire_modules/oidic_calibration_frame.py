@@ -166,3 +166,4 @@ class OIDICCalibrationFrame(wx.Frame):
 
     def on_save(self, event=None):
         self.lc_ch_set.write_oidic_config()
+        
