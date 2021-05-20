@@ -1,4 +1,9 @@
-from oidic import liquid_crystal_calibration
+# -*- coding: utf-8 -*-
+
+"""
+@author: zacsimile
+"""
+from . import liquid_crystal_calibration
 
 import wx
 import matplotlib

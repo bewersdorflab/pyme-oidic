@@ -1,8 +1,13 @@
+# -*- coding: utf-8 -*-
+
+"""
+@author: zacsimile
+"""
 import PYME.ui.manualFoldPanel as afp
 from PYME.Acquire.ui import seqdialog
 from PYME.Acquire.xyztc import MemoryBackend
 
-from . import oidic
+from . import oidic_acquisition
 
 import wx
 import logging
@@ -105,9 +110,9 @@ class OIDICAcquisitionPanel(afp.foldingPane):
 
     def on_go(self, event=None):
 
-        self.scope.oidic = oidic.OIDICAcquisition(self.scope,
-                                                  images_to_average=float(self.images_to_average.GetValue()),
-                                                  background_image=bool(self.background.GetValue()))
+        self.scope.oidic = oidic_acquisition.OIDICAcquisition(self.scope,
+                                                              images_to_average=float(self.images_to_average.GetValue()),
+                                                              background_image=bool(self.background.GetValue()))
 
         self.scope.oidic.start()
 

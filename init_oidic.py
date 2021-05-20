@@ -63,7 +63,7 @@ def pz(scope):
 @init_hardware('Liquid Crystals')
 def liquid_crystals(scope):
     from PYME.Acquire.Hardware.ARCoptix import lcdriver
-    from oidic import liquid_crystal_calibration
+    from oidic.pymeacquire_modules import liquid_crystal_calibration
 
     scope.lc_driver = lcdriver.LCDriver()
     scope.channel_settings = liquid_crystal_calibration.LCChannelSettings(scope)

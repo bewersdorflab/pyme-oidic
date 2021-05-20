@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+
+"""
+@author: zacsimile
+"""
 from PYME.Acquire import xyztc
 
 import numpy as np

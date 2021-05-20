@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+
+"""
+@author: zacsimile
+"""
 import wx
 import time
 import matplotlib.pyplot as plt

@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+
+"""
+@author: zacsimile
+"""
 from PYME.recipes.base import register_module, ModuleBase
 from PYME.recipes.traits import Input, Output, Float
 
