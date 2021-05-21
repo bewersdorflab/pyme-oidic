@@ -1,50 +1,8 @@
-# -*- coding: utf-8 -*-
-
-"""
-@author: zacsimile
-
-See references below for descriptions of notations used.
-
-References
-----------
-M. Shribak, “Differential Interference Microscopy,” in Biomedical 
-Optical Phase Microscopy and Nanoscopy, 2012.
-
-M. Shribak, “Quantitative orientation-independent differential 
-interference contrast microscope with fast switching shear 
-direction and bias modulation,” J. Opt. Soc. Am. A, vol. 30, 
-no. 4, p. 769, 2013.
-
-M. Shribak, K. G. Larkin, and D. Biggs, “Mapping optical path length 
-and image enhancement using quantitative orientation-independent 
-differential interference contrast microscopy,” J. Biomed. Opt., vol. 
-22, no. 1, p. 016006, 2017.
-"""
 import numpy as np
 
 def calculate_A(image_stack, wavelength, bias, n_frames=6):
     """
     Calculate A terms (see references).
-
-    Image stacks are expected to have the following order in the channel column.
-
-    4-frame
-    c    dir     bias
-    -----------------
-    0    -45    -bias
-    1    -45    +bias
-    2    +45    -bias
-    3    +45    +bias
-
-    6-frame
-    c    dir     bias
-    -----------------
-    0    -45    -bias
-    1    -45    0
-    2    -45    +bias
-    3    +45    -bias
-    4    +45    0
-    5    +45    +bias
 
     Parameters
     ----------
@@ -53,7 +11,7 @@ def calculate_A(image_stack, wavelength, bias, n_frames=6):
     wavelength : float
         Central wavelength used in imaging (nm).
     bias : float
-        Bias used in imaging (fraction of central wavelength).
+        Bias used in imaging (nm).
     n_frames : int, optional
         Number of frames (4 or 6), by default 6
 
@@ -67,23 +25,33 @@ def calculate_A(image_stack, wavelength, bias, n_frames=6):
     assert ((n_frames == 4) or (n_frames == 6))
 
     scale = np.tan(np.pi*bias/wavelength)
-
+    
+    # unsigned integers mess up during subtraction, so cast to float
     if n_frames == 4:
-        num0 = image_stack.data_xyztc[:,:,:,:,1] - image_stack.data_xyztc[:,:,:,:,0]
-        denom0 = image_stack.data_xyztc[:,:,:,:,1] + image_stack.data_xyztc[:,:,:,:,0]
-        num1 = image_stack.data_xyztc[:,:,:,:,3] - image_stack.data_xyztc[:,:,:,:,2]
-        denom1 = image_stack.data_xyztc[:,:,:,:,3] + image_stack.data_xyztc[:,:,:,:,2]
+        num0 = image_stack.data_xyztc[:,:,:,:,1].astype(float) \
+               - image_stack.data_xyztc[:,:,:,:,0].astype(float)
+        denom0 = image_stack.data_xyztc[:,:,:,:,1].astype(float) \
+                 + image_stack.data_xyztc[:,:,:,:,0].astype(float)
+        num1 = image_stack.data_xyztc[:,:,:,:,3].astype(float) \
+               - image_stack.data_xyztc[:,:,:,:,2].astype(float)
+        denom1 = image_stack.data_xyztc[:,:,:,:,3].astype(float) \
+                 + image_stack.data_xyztc[:,:,:,:,2].astype(float)
     elif n_frames == 6:
-        num0 = image_stack.data_xyztc[:,:,:,:,2] - image_stack.data_xyztc[:,:,:,:,0]
-        denom0 = image_stack.data_xyztc[:,:,:,:,2] + image_stack.data_xyztc[:,:,:,:,0] \
-                 - 2.0*image_stack.data_xyztc[:,:,:,:,1]
-        num1 = image_stack.data_xyztc[:,:,:,:,5] - image_stack.data_xyztc[:,:,:,:,3]
-        denom1 = image_stack.data_xyztc[:,:,:,:,5] + image_stack.data_xyztc[:,:,:,:,3] \
-                 - 2.0*image_stack.data_xyztc[:,:,:,:,4]
-
+        num0 = image_stack.data_xyztc[:,:,:,:,2].astype(float) \
+               - image_stack.data_xyztc[:,:,:,:,0].astype(float)
+        denom0 = image_stack.data_xyztc[:,:,:,:,2].astype(float) \
+                 + image_stack.data_xyztc[:,:,:,:,0].astype(float) \
+                 - 2.0*image_stack.data_xyztc[:,:,:,:,1].astype(float)
+        num1 = image_stack.data_xyztc[:,:,:,:,5].astype(float) \
+               - image_stack.data_xyztc[:,:,:,:,3].astype(float)
+        denom1 = image_stack.data_xyztc[:,:,:,:,5].astype(float) \
+                 + image_stack.data_xyztc[:,:,:,:,3].astype(float) \
+                 - 2.0*image_stack.data_xyztc[:,:,:,:,4].astype(float)
 
     A0 = (num0/denom0)*scale
+    A0[denom0 == 0] = 0
     A1 = (num1/denom1)*scale
+    A1[denom1 == 0] = 0
     return A0, A1
 
 def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg=None, A1_bg=None):
@@ -123,5 +91,73 @@ def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg=None,
 
     return mag, azim
 
-def reconstruct6(image_stack, wavelength, bias, floor, ceil):
-    pass
+def reconstruct(image_stack, wavelength, bias, shear_distance, 
+                background_stack=None, n_frames=6, reconstruction_type='integrate'):
+    """
+    Reconstruct OIDIC images--either OPL or Riesz transform.
+    
+    Image stacks are expected to have the following order in the channel column.
+
+    4-frame
+    c    dir     bias
+    -----------------
+    0    -45    -bias
+    1    -45    +bias
+    2    +45    -bias
+    3    +45    +bias
+
+    6-frame
+    c    dir     bias
+    -----------------
+    0    -45    -bias
+    1    -45    0
+    2    -45    +bias
+    3    +45    -bias
+    4    +45    0
+    5    +45    +bias
+
+    Parameters
+    ----------
+    image_stack : PYME.io.image.ImageStack
+        Image stack containing raw sample DIC images for OIDIC stack
+    wavelength : float
+        Central wavelength used in imaging (nm).
+    bias : float
+        Bias used in imaging (nm).
+    shear_distance : float
+        Shear distance of recombining prism used in imaging (nm).
+    background_stack : PYME.io.image.ImageStack
+        Image stack containing raw background DIC images for OIDIC stack
+    n_frames : int, optional
+        Number of frames (4 or 6), by default 6
+    reconstruction_type : string, optional
+        Method to use to reconstruct the OIDIC image: 'integrate' or 
+        'riesz', by default 'integrate'
+    """
+    assert ((reconstruction_type=='integrate') or (reconstruction_type=='riesz'))
+    
+    A0, A1 = calculate_A(image_stack, wavelength, bias, n_frames)
+    if background_stack is not None:
+        A0_bg, A1_bg = calculate_A(background_stack, wavelength, bias, n_frames)
+    else:
+        A0_bg, A1_bg = None, None
+    mag, azim = calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg, A1_bg)
+    
+    ft_grad = np.fft.fft2(mag*np.exp(1j*azim), axes=(0,1))
+    
+    lx, ly = image_stack.data_xyztc.shape[0], image_stack.data_xyztc.shape[1]
+    dx, dy = image_stack.voxelsize_nm.x, image_stack.voxelsize_nm.y
+    fx = np.fft.fftfreq(lx)*dx
+    fy = np.fft.fftfreq(ly)*dy
+    wx, wy = np.meshgrid(fx, fy)
+    wx[(wx == 0) & (wy == 0)] = 1e-8  # Avoid wx = wy = 0 simutaneously
+    wy[(wx == 0) & (wy == 0)] = 1e-8
+    if reconstruction_type == 'integrate':
+        fact = 1.0/(1j * (wx + 1j * wy))
+    elif reconstruction_type == 'riesz':
+        fact = (wx - 1j*wy)/(1j*np.sqrt(wx*wx+wy*wy))
+    
+    opl = np.abs(np.real(np.fft.ifft2(ft_grad*fact[:,:,None,None], axes=(0,1))))
+    
+    return opl
+    
