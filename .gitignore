@@ -1,4 +1,5 @@
 *.egg-info
-*.log
+*.log*
 .vscode
 *.pyc
+build*

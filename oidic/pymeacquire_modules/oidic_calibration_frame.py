@@ -153,6 +153,15 @@ class OIDICCalibrationFrame(wx.Frame):
         self.lc_ch_set.initialize_calibration()
 
     def on_calibrate(self, event=None):
+        self.set_calibration_values()
+
+        self.lc_calibrator.run()
+
+        self.voltage_dir1_zero.SetValue(str(self.lc_ch_set.get('lc_voltage_dir1_zero')))
+
+        self.plot_calibrations()
+
+    def set_calibration_values(self):
         # Grab the latest and greatest voltages/values we need
         self.lc_ch_set.set_lc_voltage_dir0(float(self.voltage_dir0.GetValue()))
         self.lc_ch_set.set_lc_voltage_dir0_zero(float(self.voltage_dir0_zero.GetValue()))
@@ -165,10 +174,7 @@ class OIDICCalibrationFrame(wx.Frame):
         self.lc_ch_set.set_wavelength(float(self.wavelength.GetValue()))
         self.lc_ch_set.set_shear_distance(float(self.shear_distance.GetValue()))
 
-        self.lc_calibrator.run()
-
-        self.plot_calibrations()
-
     def on_save(self, event=None):
+        self.set_calibration_values()
         self.lc_ch_set.write_oidic_config()
         

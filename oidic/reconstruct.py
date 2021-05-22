@@ -71,14 +71,16 @@ def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg=None,
     shear_distance : float
         Shear distance of recombining prism used in imaging (nm).
     A0_bg : np.array, optional
-        [description], by default None
+        Background for shear direction 0, by default None
     A1_bg : np.array, optional
-        [description], by default None
+        Background for shear direction 1, by default None
 
     Returns
     -------
-    [type]
-        [description]
+    mag : np.array
+        Magnitude of OPL gradient
+    azim : np.array
+        Azimuth of OPL gradient
     """
     if A0_bg is not None:
         A0 = A0 - A0_bg
@@ -137,6 +139,11 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     reconstruction_type : string, optional
         Method to use to reconstruct the OIDIC image: 'integrate' or 
         'riesz', by default 'integrate'
+
+    Returns
+    -------
+    oidic : np.array
+        4D XYZT array of reconstructed OIDIC image.
     """
     assert ((reconstruction_type=='integrate') or (reconstruction_type=='riesz'))
     
@@ -163,7 +170,7 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     elif reconstruction_type == 'riesz':
         fact = (wx - 1j*wy)/(1j*np.sqrt(wx*wx+wy*wy))
     
-    opl = np.abs(np.real(np.fft.ifft2(ft_grad*fact[:,:,None,None], axes=(0,1))))
-    opl -= np.min(opl)  # I wish we didn't have to do this...
+    oidic = np.abs(np.real(np.fft.ifft2(ft_grad*fact[:,:,None,None], axes=(0,1))))
+    oidic -= np.min(oidic)  # I wish we didn't have to do this...
     
-    return opl
+    return oidic

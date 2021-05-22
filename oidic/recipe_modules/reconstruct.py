@@ -3,35 +3,56 @@
 """
 @author: zacsimile
 """
+from os import name
 from PYME.recipes.base import register_module, ModuleBase
-from PYME.recipes.traits import Input, Output, Float
+from PYME.recipes.traits import Input, Output, Float, Int, Enum
 
-@register_module('ReconstructOPL')
-class ReconstructOPL(ModuleBase):
+@register_module('ReconstructOIDIC')
+class ReconstructOIDIC(ModuleBase):
     """
-    Reconstruct an optical path length map from an OIDIC image stack.
+    Reconstruct an optical path length map (or Riesz image) from an OIDIC image stack.
     """
 
     image = Input('oidic_stack')
-    output = Output('opl')
+    background_image = Input('background_oidic_stack')
+    output = Output('oidic')
 
-    # Optical path length ceiling and floor
-    # -1.0 implies auto-calculation
-    ceil = Float(-1.0)
-    floor = Float(-1.0)
+    wavelength=Float(530.0)
+    bias=Float(0.15)
+    shear_distance = Float(172.0)
+    numerical_aperture = Float(1.35)
+    n_frames = Int(6)
+    reconstruction_type = Enum(['integrate', 'riesz'])
 
     def execute(self, namespace):
-        # image = namespace[self.image]
-        #
-        #
-        # opl = ImageStack(processed_data)  # optical path length map
-        # opl.mdh.copyEntriesFrom(image.mdh)
-        # opl.mdh['Parent'] = image.filename
-        # self.complete_metadata(opl)
-        # self.namespace[output] = opl
-        pass
+        from oidic import reconstruct
+        from PYME.IO.image import ImageStack
+
+        image = namespace[self.image]
+        if self.background_image is not None:
+            background_image = namespace[self.background_image]
+        else:
+            background_image = None
+        
+        processed_data = reconstruct.reconstruct(image, self.wavelength, self.bias*self.wavelength,
+                                                 self.shear_distance, self.numerical_aperture,
+                                                 background_image, self.n_frames,
+                                                 self.reconstruction_type)
+        
+        opl = ImageStack(data=processed_data)  # TODO: add PYME.IO.DataSources.BaseDataSource.XYZTCWrapper?
+                                               # XYZTCWrapper(ArrayDataSource(processed_data), 'XYZTC', processed_data.shape[2], processed_data.shape[3], 1)
+        
+        opl.mdh.copyEntriesFrom(image.mdh)
+        opl.mdh['Parent'] = image.filename
+        opl.mdh['OIDIC.BackgroundParent'] = background_image.filename
+        self.complete_metadata(opl)
+        
+        namespace[self.output] = opl
 
     def complete_metadata(self, im):
-        # im.mdh['OIDIC.opl_ceil'] = self.ceil
-        # im.mdh['OIDIC.opl_floor'] = self.floor
-        pass
+        im.mdh['OIDIC.ReconstructionWavelength'] = self.wavelength
+        im.mdh['OIDIC.ReconstructionBias'] = self.bias
+        im.mdh['OIDIC.ReconstructionShear'] = self.wavelength
+        im.mdh['OIDIC.ReconstructionNumericalAperture'] = self.numerical_aperture
+        im.mdh['OIDIC.ReconstructionNumChannels'] = self.n_frames
+        im.mdh['OIDIC.ReconstructionType'] = self.reconstruction_type

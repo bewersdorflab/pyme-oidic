@@ -37,7 +37,7 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
         self.frame_data = None
 
         # Set some metadata
-        self.storage.mdh['BackgroundImage'] = background_image
+        self.storage.mdh['OIDIC.BackgroundImage'] = background_image
         self.storage.mdh['NumChannels'] = self.channel_settings.num_channels
 
     def on_frame(self, sender, frameData, **kwargs):

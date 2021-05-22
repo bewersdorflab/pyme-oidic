@@ -65,8 +65,8 @@ class LCCalibrator(object):
         # Switch to the other shear direction and grid search for the minimum mean
         self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 1)
 
-        self.volts_to_check = np.linspace(self.lc_ch_set._lc_voltage_dir0_zero-1.5, 
-                                          self.lc_ch_set._lc_voltage_dir0_zero+1.5, 
+        self.volts_to_check = np.linspace(self.lc_ch_set._lc_voltage_dir0_zero-0.5, 
+                                          self.lc_ch_set._lc_voltage_dir0_zero+0.5, 
                                           self.num_calibrations)
         self.means = np.zeros_like(self.volts_to_check)
         self.i = 0
@@ -191,6 +191,7 @@ class LCChannelSettings(object):
         try:
             mdh.setEntry('OIDIC.Bias', self._lc_bias)
             mdh.setEntry('OIDIC.Wavelength', self._wavelength)
+            mdh.setEntry('OIDIC.ShearDistance', self._shear_distance)
             mdh.setEntry('OIDIC.SettlingTime', self._settling_time)
             mdh.setEntry('OIDIC.LCVoltageDir0', self._lc_voltage_dir0)
             mdh.setEntry('OIDIC.LCVoltageDir1', self._lc_voltage_dir1)
