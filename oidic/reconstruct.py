@@ -1,5 +1,7 @@
 import numpy as np
 
+EPS = 1e-8
+
 def calculate_A(image_stack, wavelength, bias, n_frames=6):
     """
     Calculate A terms (see references).
@@ -84,14 +86,14 @@ def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg=None,
         A1 = A1 - A1_bg
 
     scale = wavelength/(2*np.sqrt(2)*np.pi*shear_distance)
-    atan_A0 = np.arctan(A0)  # TODO: should we pass A0 and A1 as num*scale and denom so 
-    atan_A1 = np.arctan(A1)  #       we can use np.arctan2 here?
+    atan_A0 = np.arctan(A0)  
+    atan_A1 = np.arctan(A1)  
     mag = scale*np.sqrt(atan_A0*atan_A0+atan_A1*atan_A1)
     azim = np.arctan2(atan_A1,atan_A0)
 
     return mag, azim
 
-def reconstruct(image_stack, wavelength, bias, shear_distance, 
+def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_aperture,
                 background_stack=None, n_frames=6, reconstruction_type='integrate'):
     """
     Reconstruct OIDIC images--either OPL or Riesz transform.
@@ -126,6 +128,8 @@ def reconstruct(image_stack, wavelength, bias, shear_distance,
         Bias used in imaging (nm).
     shear_distance : float
         Shear distance of recombining prism used in imaging (nm).
+    numerical_aperture : float
+        Numerical aperture of the acquiring system.
     background_stack : PYME.io.image.ImageStack
         Image stack containing raw background DIC images for OIDIC stack
     n_frames : int, optional
@@ -147,17 +151,19 @@ def reconstruct(image_stack, wavelength, bias, shear_distance,
     
     lx, ly = image_stack.data_xyztc.shape[0], image_stack.data_xyztc.shape[1]
     dx, dy = image_stack.voxelsize_nm.x, image_stack.voxelsize_nm.y
-    fx = np.fft.fftfreq(lx)*dx
-    fy = np.fft.fftfreq(ly)*dy
-    wx, wy = np.meshgrid(fx, fy)
-    wx[(wx == 0) & (wy == 0)] = 1e-8  # Avoid wx = wy = 0 simutaneously
-    wy[(wx == 0) & (wy == 0)] = 1e-8
+    otf_scale_x = 2*(numerical_aperture/wavelength)*dx  # dx and dy here are assumed to include
+    otf_scale_y = 2*(numerical_aperture/wavelength)*dy  # binning*pixel_size/magnification
+    fx = np.fft.fftfreq(lx)*otf_scale_x
+    fy = np.fft.fftfreq(ly)*otf_scale_y
+    wx, wy = np.meshgrid(fx, -fy)  # works better as -fy...why???
+    wx[(wx == 0) & (wy == 0)] = EPS  # Avoid wx = wy = 0 simutaneously
+    wy[(wx == 0) & (wy == 0)] = EPS
     if reconstruction_type == 'integrate':
         fact = 1.0/(1j * (wx + 1j * wy))
     elif reconstruction_type == 'riesz':
         fact = (wx - 1j*wy)/(1j*np.sqrt(wx*wx+wy*wy))
     
     opl = np.abs(np.real(np.fft.ifft2(ft_grad*fact[:,:,None,None], axes=(0,1))))
+    opl -= np.min(opl)  # I wish we didn't have to do this...
     
     return opl
-    
