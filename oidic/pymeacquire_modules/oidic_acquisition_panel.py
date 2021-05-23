@@ -127,14 +127,17 @@ class OIDICAcquisitionPanel(afp.foldingPane):
         self.b_stop.Disable()
 
     def on_stack(self, **kwargs):
-        from PYME.DSView import ViewIm3D
         self.scope.oidic.on_series_end.disconnect(self.on_stack)
 
         # potentially redundant
         self.b_go.Enable()
         self.b_stop.Disable()
 
-        wx.CallAfter(ViewIm3D(self.scope.oidic.storage.image))
+        wx.CallAfter(self.visualize_stack)
+
+    def visualize_stack(self):
+        from PYME.DSView import ViewIm3D
+        ViewIm3D(self.scope.oidic.storage.image)
 
     def on_bias_change(self, event=None):
         self.scope.channel_settings.set_bias(float(self.bias.GetValue()))
