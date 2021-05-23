@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from PYME.config import user_config_dir, update_yaml_keys
 from PYME.Acquire.Hardware.ARCoptix import lcdriver
 from PYME.IO import MetaDataHandler
+from PYME.contrib import dispatch
 
 import numpy as np
 import pandas as pd
@@ -56,6 +57,8 @@ class LCCalibrator(object):
 
         self.dir0_zero_mean = 0
 
+        self.on_calibrated = dispatch.Signal()
+
     def run(self):
         # We should already be initialized but double check
         self.lc_ch_set.initialize_calibration()
@@ -98,7 +101,7 @@ class LCCalibrator(object):
         print(self.means)
         print(type(self.volts_to_check), type(self.means))
         res = np.polyfit(self.volts_to_check,self.means,2)
-        min_v = -res[1]/(2*res[0])  # should be analytic, single zero
+        min_v = round(-res[1]/(2*res[0]), 2)  # should be analytic, single zero
 
         plt.figure()
         plt.scatter(self.volts_to_check, self.means)
@@ -116,6 +119,8 @@ class LCCalibrator(object):
         time.sleep(self.lc_ch_set._settling_time)
         self.scope.frameWrangler.start()
         dir1_zero_mean = self.scope.frameWrangler.currentFrame.mean()
+
+        self.on_calibrated.send(self)
 
         # Alert the user to the mean values (should be equal)
         dialog = wx.MessageDialog(None, 
@@ -246,7 +251,10 @@ class LCChannelSettings(object):
 
     def write_oidic_config(self):
         self.update_oidic_config()
-        update_yaml_keys(config_file, self._oidic_config)
+        # stopgap to work around update_yaml_keys
+        d = self._oidic_config
+        d['lc_cal_file'] = d['lc_cal_file'].replace("\\","\\\\")
+        update_yaml_keys(config_file, d)
 
     def interpolate_ret(self, vals):
         # Get a ret value from the calibration curve based on volts

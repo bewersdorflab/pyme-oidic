@@ -141,6 +141,8 @@ class OIDICCalibrationFrame(wx.Frame):
 
             # Plot the locations of +/- bias
 
+        self.figure.canvas.draw()
+
     def on_initialize(self, event=None):
         """
         Set the OIDIC state to shear direction 0, zero bias
@@ -155,11 +157,20 @@ class OIDICCalibrationFrame(wx.Frame):
     def on_calibrate(self, event=None):
         self.set_calibration_values()
 
+        self.lc_calibrator.on_calibrated.connect(self.on_calibrated)
         self.lc_calibrator.run()
 
+    def on_calibrated(self, **kwargs):
+        self.lc_calibrator.on_calibrated.disconnect(self.on_calibrated)
+
         self.voltage_dir1_zero.SetValue(str(self.lc_ch_set.get('lc_voltage_dir1_zero')))
+        self.voltage_dir1_zero.Update()
+        self.voltage_dir1_zero.Refresh()
 
         self.plot_calibrations()
+
+        self.Update()
+        self.Refresh()
 
     def set_calibration_values(self):
         # Grab the latest and greatest voltages/values we need
