@@ -140,6 +140,18 @@ class OIDICCalibrationFrame(wx.Frame):
                               s=80, facecolors='none', edgecolors='r')
 
             # Plot the locations of +/- bias
+            self.dir0.scatter(self.lc_ch_set.get('lc_voltage_dir0_zero_minus'), 
+                              self.lc_ch_set.get('lc_ret_dir0_zero_minus'),
+                              s=80, facecolors='none', edgecolors='b')
+            self.dir0.scatter(self.lc_ch_set.get('lc_voltage_dir0_zero_plus'), 
+                              self.lc_ch_set.get('lc_ret_dir0_zero_plus'),
+                              s=80, facecolors='none', edgecolors='b')
+            self.dir1.scatter(self.lc_ch_set.get('lc_voltage_dir1_zero_minus'), 
+                              self.lc_ch_set.get('lc_ret_dir1_zero_minus'),
+                              s=80, facecolors='none', edgecolors='b')
+            self.dir1.scatter(self.lc_ch_set.get('lc_voltage_dir1_zero_plus'), 
+                              self.lc_ch_set.get('lc_ret_dir1_zero_plus'),
+                              s=80, facecolors='none', edgecolors='b')
 
         self.figure.canvas.draw()
 
