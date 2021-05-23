@@ -65,23 +65,25 @@ class LCCalibrator(object):
         # Grab this mean as a sanity check
         self.dir0_zero_mean = self.scope.frameWrangler.currentFrame.mean()
 
-        # Switch to the other shear direction and grid search for the minimum mean
-        self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 1)
-
-        self.volts_to_check = np.linspace(self.lc_ch_set._lc_voltage_dir0_zero-0.5, 
-                                          self.lc_ch_set._lc_voltage_dir0_zero+0.5, 
+        self.volts_to_check = np.linspace(self.lc_ch_set._lc_voltage_dir0_zero-1.5, 
+                                          self.lc_ch_set._lc_voltage_dir0_zero+1.5, 
                                           self.num_calibrations)
         self.means = np.zeros_like(self.volts_to_check)
         self.i = 0
 
         self.scope.frameWrangler.stop()
         self.scope.frameWrangler.onFrame.connect(self.on_frame)
+        # Switch to the other shear direction
+        self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 1)
+        self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 0)
+        time.sleep(self.lc_ch_set._settling_time)
         self.scope.frameWrangler.start()
 
     def on_frame(self, sender, frameData, **kwargs):
         self.means[self.i] = frameData.mean()
         
         self.i += 1
+
         if self.i >= self.num_calibrations:
             self.scope.frameWrangler.stop()
             self.scope.frameWrangler.onFrame.disconnect(self.on_frame)
