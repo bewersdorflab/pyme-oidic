@@ -1,6 +1,7 @@
+from matplotlib.pyplot import axes
 import numpy as np
 
-EPS = 1e-8
+EPS = 1
 
 def calculate_A(image_stack, wavelength, bias, n_frames=6):
     """
@@ -87,7 +88,7 @@ def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg=None,
     if A1_bg is not None:
         A1 = A1 - A1_bg
 
-    scale = wavelength/(2*np.sqrt(2)*np.pi*shear_distance)
+    scale = wavelength/(2*np.pi*shear_distance)  #*np.sqrt(2)?
     atan_A0 = np.arctan(A0)  
     atan_A1 = np.arctan(A1)  
     mag = scale*np.sqrt(atan_A0*atan_A0+atan_A1*atan_A1)
@@ -105,20 +106,20 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     4-frame
     c    dir     bias
     -----------------
-    0    -45    -bias
-    1    -45    +bias
-    2    +45    -bias
-    3    +45    +bias
+    0    -45    +bias
+    1    -45    -bias
+    2    +45    +bias
+    3    +45    -bias
 
     6-frame
     c    dir     bias
     -----------------
-    0    -45    -bias
+    0    -45    +bias
     1    -45    0
-    2    -45    +bias
-    3    +45    -bias
+    2    -45    -bias
+    3    +45    +bias
     4    +45    0
-    5    +45    +bias
+    5    +45    -bias
 
     Parameters
     ----------
@@ -158,19 +159,22 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     
     lx, ly = image_stack.data_xyztc.shape[0], image_stack.data_xyztc.shape[1]
     dx, dy = image_stack.voxelsize_nm.x, image_stack.voxelsize_nm.y
-    otf_scale_x = 2*(numerical_aperture/wavelength)*dx  # dx and dy here are assumed to include
-    otf_scale_y = 2*(numerical_aperture/wavelength)*dy  # binning*pixel_size/magnification
+    # otf_scale_x = wavelength/(2.0*numerical_aperture*dx)  # dx and dy here are assumed to include
+    # otf_scale_y = wavelength/(2.0*numerical_aperture*dy)  # binning*pixel_size/magnification
+    otf_scale_x = 2.0*np.pi/dx
+    otf_scale_y = 2.0*np.pi/dy
     fx = np.fft.fftfreq(lx)*otf_scale_x
     fy = np.fft.fftfreq(ly)*otf_scale_y
-    wx, wy = np.meshgrid(fx, -fy)  # works better as -fy...why???
+    wx, wy = np.meshgrid(fx, fy)
     wx[(wx == 0) & (wy == 0)] = EPS  # Avoid wx = wy = 0 simutaneously
     wy[(wx == 0) & (wy == 0)] = EPS
     if reconstruction_type == 'integrate':
-        fact = 1.0/(1j * (wx + 1j * wy))
+        fact = 1.0/(1j * (wx - 1j * wy))
     elif reconstruction_type == 'riesz':
         fact = (wx - 1j*wy)/(1j*np.sqrt(wx*wx+wy*wy))
     
-    oidic = np.abs(np.real(np.fft.ifft2(ft_grad*fact[:,:,None,None], axes=(0,1))))
-    oidic -= np.min(oidic)  # I wish we didn't have to do this...
-    
+    integrated = ft_grad*fact[:,:,None,None]
+    oidic = np.real(np.fft.ifft2(integrated, axes=(0,1)))
+    oidic -= np.min(oidic)
+
     return oidic
