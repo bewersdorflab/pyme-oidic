@@ -44,7 +44,8 @@ class ReconstructOIDIC(ModuleBase):
         
         opl.mdh.copyEntriesFrom(image.mdh)
         opl.mdh['Parent'] = image.filename
-        opl.mdh['OIDIC.BackgroundParent'] = background_image.filename
+        if background_image is not None:
+            opl.mdh['OIDIC.BackgroundParent'] = background_image.filename
         self.complete_metadata(opl)
         
         namespace[self.output] = opl

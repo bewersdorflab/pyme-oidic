@@ -65,8 +65,8 @@ class LCCalibrator(object):
         # Grab this mean as a sanity check
         self.dir0_zero_mean = self.scope.frameWrangler.currentFrame.mean()
 
-        self.volts_to_check = np.linspace(self.lc_ch_set._lc_voltage_dir0_zero-1.5, 
-                                          self.lc_ch_set._lc_voltage_dir0_zero+1.5, 
+        self.volts_to_check = np.linspace(self.lc_ch_set._lc_voltage_dir0_zero-1.0, 
+                                          self.lc_ch_set._lc_voltage_dir0_zero+1.0, 
                                           self.num_calibrations)
         self.means = np.zeros_like(self.volts_to_check)
         self.i = 0
@@ -74,8 +74,8 @@ class LCCalibrator(object):
         self.scope.frameWrangler.stop()
         self.scope.frameWrangler.onFrame.connect(self.on_frame)
         # Switch to the other shear direction
-        self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 1)
-        self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 0)
+        self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 0)
+        self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 1)
         time.sleep(self.lc_ch_set._settling_time)
         self.scope.frameWrangler.start()
 
@@ -92,17 +92,16 @@ class LCCalibrator(object):
         else:
             self.scope.frameWrangler.stop()
             #set new voltages
-            self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 0)
+            self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 1)
             time.sleep(self.lc_ch_set._settling_time)
             self.scope.frameWrangler.start()
             # update_progress_bar()
 
     def on_done(self):
-        # Fit a quadratic to find the minimum voltage
-        print(self.volts_to_check)
-        print(self.means)
-        print(type(self.volts_to_check), type(self.means))
-        res = np.polyfit(self.volts_to_check,self.means,2)
+        # Fit a quadratic to find the minimum voltage using the smallest 3 values
+        min_mean = np.argmin(self.means)
+        smallest_idxs = np.arange(min_mean-1, min_mean+2)
+        res = np.polyfit(self.volts_to_check[smallest_idxs],self.means[smallest_idxs],2)
         min_v = round(-res[1]/(2*res[0]), 2)  # should be analytic, single zero
 
         plt.figure()
@@ -117,7 +116,7 @@ class LCCalibrator(object):
 
         self.scope.frameWrangler.stop()
         # Grab the mean values
-        self.lc_ch_set.lc_driver.set_dac_voltage(min_v, 0)
+        self.lc_ch_set.lc_driver.set_dac_voltage(min_v, 1)
         time.sleep(self.lc_ch_set._settling_time)
         self.scope.frameWrangler.start()
         dir1_zero_mean = self.scope.frameWrangler.currentFrame.mean()
@@ -238,8 +237,8 @@ class LCChannelSettings(object):
             calibration = pd.read_excel(calibration_file)
 
             # Specific to the calibration file from Michael Shribak
-            volts = (calibration.to_numpy()[1:,9]).astype(float)
-            ret = (calibration.to_numpy()[1:,10]).astype(float)
+            volts = (calibration.to_numpy()[1:,6]).astype(float)
+            ret = (calibration.to_numpy()[1:,7]).astype(float)
         else:
             raise NotImplementedError('File source not supported.')
 
@@ -287,7 +286,6 @@ class LCChannelSettings(object):
             self._lc_ret_dir0_zero_plus = self._lc_ret_dir0_zero + self._lc_bias
             self._lc_voltage_dir0_zero_minus = self.interpolate_volts(self._lc_ret_dir0_zero_minus)
             self._lc_voltage_dir0_zero_plus = self.interpolate_volts(self._lc_ret_dir0_zero_plus)
-
         if self._lc_bias and self._lc_voltage_dir1_zero:
             self._lc_ret_dir1_zero = self.interpolate_ret(self._lc_voltage_dir1_zero)
             self._lc_ret_dir1_zero_minus = self._lc_ret_dir1_zero - self._lc_bias
@@ -299,20 +297,20 @@ class LCChannelSettings(object):
         """
         Set liquid crystal voltages per imaging channel (4 or 6).
         """
-        self._chan0 = []  # shear direction
-        self._chan1 = []  # bias
+        self._chan0 = []  # bias
+        self._chan1 = []  # shear direction
 
         if self.num_channels == 4:
-            self._chan0 = [self._lc_voltage_dir0,self._lc_voltage_dir0,
+            self._chan1 = [self._lc_voltage_dir0,self._lc_voltage_dir0,
                            self._lc_voltage_dir1,self._lc_voltage_dir1]
-            self._chan1 = [self._lc_voltage_dir0_zero_plus,
+            self._chan0 = [self._lc_voltage_dir0_zero_plus,
                            self._lc_voltage_dir0_zero_minus,
                            self._lc_voltage_dir1_zero_plus,
                            self._lc_voltage_dir1_zero_minus]
         elif self.num_channels == 6:
-            self._chan0 = [self._lc_voltage_dir0,self._lc_voltage_dir0,self._lc_voltage_dir0,
+            self._chan1 = [self._lc_voltage_dir0,self._lc_voltage_dir0,self._lc_voltage_dir0,
                            self._lc_voltage_dir1,self._lc_voltage_dir1,self._lc_voltage_dir1]
-            self._chan1 = [self._lc_voltage_dir0_zero_plus,
+            self._chan0 = [self._lc_voltage_dir0_zero_plus,
                            self._lc_voltage_dir0_zero,
                            self._lc_voltage_dir0_zero_minus,
                            self._lc_voltage_dir1_zero_plus,
@@ -334,8 +332,8 @@ class LCChannelSettings(object):
         if not (c_idx < self.num_channels):
             raise RuntimeError(f"{c_idx} is larger than {self.num_channels-1}")
 
-        self.lc_driver.set_dac_voltage(self._chan0[c_idx], 0)
-        self.lc_driver.set_dac_voltage(self._chan1[c_idx], 1)
+        self.lc_driver.set_dac_voltage(self._chan0[c_idx], 1)
+        self.lc_driver.set_dac_voltage(self._chan1[c_idx], 0)
 
     def set_bias(self, bias):
         self._lc_bias = bias
