@@ -253,10 +253,7 @@ class LCChannelSettings(object):
 
     def write_oidic_config(self):
         self.update_oidic_config()
-        # stopgap to work around update_yaml_keys
-        d = self._oidic_config
-        d['lc_cal_file'] = d['lc_cal_file'].replace("\\","\\\\")
-        update_yaml_keys(config_file, d)
+        update_yaml_keys(config_file, self._oidic_config)
 
     def interpolate_ret(self, vals):
         # Get a ret value from the calibration curve based on volts
