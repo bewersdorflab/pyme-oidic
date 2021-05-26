@@ -44,10 +44,10 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
         # Overload xyztc frame data to do image averaging
         if self.images_to_average > 1:
             if self.average_num == 0:
-                self.frame_data = np.zeros_like(frameData)
+                self.frame_data = np.zeros_like(frameData, dtype='uint16')
 
             if self.average_num < self.images_to_average:
-                self.frame_data += frameData/self.images_to_average  # only add 1/n_images_to_average to the frame
+                self.frame_data += (frameData/self.images_to_average).astype('uint16')  # only add 1/n_images_to_average to the frame
                 self.average_num += 1
             else:
                 self.average_num = 0
