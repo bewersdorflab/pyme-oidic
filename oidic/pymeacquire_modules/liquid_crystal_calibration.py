@@ -297,20 +297,20 @@ class LCChannelSettings(object):
         """
         Set liquid crystal voltages per imaging channel (4 or 6).
         """
-        self._chan0 = []  # bias
-        self._chan1 = []  # shear direction
+        self._chan0 = []  # shear direction
+        self._chan1 = []  # bias
 
         if self.num_channels == 4:
-            self._chan1 = [self._lc_voltage_dir0,self._lc_voltage_dir0,
+            self._chan0 = [self._lc_voltage_dir0,self._lc_voltage_dir0,
                            self._lc_voltage_dir1,self._lc_voltage_dir1]
-            self._chan0 = [self._lc_voltage_dir0_zero_plus,
+            self._chan1 = [self._lc_voltage_dir0_zero_plus,
                            self._lc_voltage_dir0_zero_minus,
                            self._lc_voltage_dir1_zero_plus,
                            self._lc_voltage_dir1_zero_minus]
         elif self.num_channels == 6:
-            self._chan1 = [self._lc_voltage_dir0,self._lc_voltage_dir0,self._lc_voltage_dir0,
+            self._chan0 = [self._lc_voltage_dir0,self._lc_voltage_dir0,self._lc_voltage_dir0,
                            self._lc_voltage_dir1,self._lc_voltage_dir1,self._lc_voltage_dir1]
-            self._chan0 = [self._lc_voltage_dir0_zero_plus,
+            self._chan1 = [self._lc_voltage_dir0_zero_plus,
                            self._lc_voltage_dir0_zero,
                            self._lc_voltage_dir0_zero_minus,
                            self._lc_voltage_dir1_zero_plus,
@@ -332,8 +332,8 @@ class LCChannelSettings(object):
         if not (c_idx < self.num_channels):
             raise RuntimeError(f"{c_idx} is larger than {self.num_channels-1}")
 
-        self.lc_driver.set_dac_voltage(self._chan0[c_idx], 1)
-        self.lc_driver.set_dac_voltage(self._chan1[c_idx], 0)
+        self.lc_driver.set_dac_voltage(self._chan0[c_idx], 0)
+        self.lc_driver.set_dac_voltage(self._chan1[c_idx], 1)
 
     def set_bias(self, bias):
         self._lc_bias = bias
