@@ -303,19 +303,19 @@ class LCChannelSettings(object):
         if self.num_channels == 4:
             self._chan0 = [self._lc_voltage_dir0,self._lc_voltage_dir0,
                            self._lc_voltage_dir1,self._lc_voltage_dir1]
-            self._chan1 = [self._lc_voltage_dir0_zero_plus,
-                           self._lc_voltage_dir0_zero_minus,
-                           self._lc_voltage_dir1_zero_plus,
-                           self._lc_voltage_dir1_zero_minus]
+            self._chan1 = [self._lc_voltage_dir0_zero_minus,
+                           self._lc_voltage_dir0_zero_plus,
+                           self._lc_voltage_dir1_zero_minus,
+                           self._lc_voltage_dir1_zero_plus]
         elif self.num_channels == 6:
             self._chan0 = [self._lc_voltage_dir0,self._lc_voltage_dir0,self._lc_voltage_dir0,
                            self._lc_voltage_dir1,self._lc_voltage_dir1,self._lc_voltage_dir1]
-            self._chan1 = [self._lc_voltage_dir0_zero_plus,
+            self._chan1 = [self._lc_voltage_dir0_zero_minus,
                            self._lc_voltage_dir0_zero,
-                           self._lc_voltage_dir0_zero_minus,
-                           self._lc_voltage_dir1_zero_plus,
+                           self._lc_voltage_dir0_zero_plus,
+                           self._lc_voltage_dir1_zero_minus,
                            self._lc_voltage_dir1_zero,
-                           self._lc_voltage_dir1_zero_minus]
+                           self._lc_voltage_dir1_zero_plus]
         else:
             raise NotImplementedError(f"{self.num_channels} channels not supported")
 

@@ -106,20 +106,20 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     4-frame
     c    dir     bias
     -----------------
-    0    -45    +bias
-    1    -45    -bias
-    2    +45    +bias
-    3    +45    -bias
+    0    -45    -bias
+    1    -45    +bias
+    2    +45    -bias
+    3    +45    +bias
 
     6-frame
     c    dir     bias
     -----------------
-    0    -45    +bias
+    0    -45    -bias
     1    -45    0
-    2    -45    -bias
-    3    +45    +bias
+    2    -45    +bias
+    3    +45    -bias
     4    +45    0
-    5    +45    -bias
+    5    +45    +bias
 
     Parameters
     ----------
