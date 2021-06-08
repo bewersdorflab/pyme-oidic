@@ -55,6 +55,7 @@ def pz(scope):
 
     # try and update the pifoc position roughly as often as the PID / camera, but a little faster if we can
     scope._piFoc = piezo_e816.piezo_e816T(portname='COM15', maxtravel=50.0, Osen=0.0)
+    scope.hardwareChecks.append(scope.piFoc.OnTarget)
     scope.CleanupFunctions.append(scope._piFoc.close)
 
     scope.piFoc = opr.generate_offset_piezo_server(opr.TargetOwningOffsetPiezo)(scope._piFoc)
