@@ -24,11 +24,8 @@ def pco_cam(scope):
 
 @init_gui('sCMOS Camera controls')
 def pco_cam_controls(MainFrame, scope):
-    import wx
-    # Generate an empty, dummy control panel
-    # TODO - adapt PYME.Acquire.Hardware.AndorNeo.ZylaControlPanel or similar to allow options to be set.
-    # As it stands, we just use the default gain and readout settings.
-    scope.camControls['PcoEdge42LT'] = wx.Panel(MainFrame)
+    from PYME.Acquire.Hardware.pco.pco_sdk_cam_control_panel import PcoSdkCamControl
+    scope.camControls['PcoEdge42LT'] = PcoSdkCamControl(MainFrame, scope.cameras['PcoEdge42LT'], scope)
     MainFrame.camPanels.append((scope.camControls['PcoEdge42LT'], 'pco.edge 4.2 LT Properties'))
 
 @init_hardware('XY Stage')  # FIXME - may need module-level locks if we add 'x' and 'y' of the xy stage as different piezos
@@ -55,7 +52,7 @@ def pz(scope):
 
     # try and update the pifoc position roughly as often as the PID / camera, but a little faster if we can
     scope._piFoc = piezo_e816.piezo_e816T(portname='COM15', maxtravel=50.0, Osen=0.0)
-    scope.hardwareChecks.append(scope._piFoc.OnTarget)
+    # scope.hardwareChecks.append(scope._piFoc.OnTarget)
     scope.CleanupFunctions.append(scope._piFoc.close)
 
     scope.piFoc = opr.generate_offset_piezo_server(opr.TargetOwningOffsetPiezo)(scope._piFoc)
