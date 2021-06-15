@@ -51,8 +51,8 @@ def pz(scope):
     from PYME.Acquire.Hardware.Piezos import piezo_e816, offsetPiezoREST as opr
 
     # try and update the pifoc position roughly as often as the PID / camera, but a little faster if we can
-    scope._piFoc = piezo_e816.piezo_e816T(portname='COM15', maxtravel=50.0, Osen=0.0)
-    # scope.hardwareChecks.append(scope._piFoc.OnTarget)
+    scope._piFoc = piezo_e816.piezo_e816T(portname='COM15', maxtravel=50.0, Osen=0.0, targetTolerance=0.03)
+    scope.hardwareChecks.append(scope._piFoc.OnTarget)
     scope.CleanupFunctions.append(scope._piFoc.close)
 
     scope.piFoc = opr.generate_offset_piezo_server(opr.TargetOwningOffsetPiezo)(scope._piFoc)
@@ -65,6 +65,7 @@ def liquid_crystals(scope):
 
     scope.lc_driver = lcdriver.LCDriver()
     scope.channel_settings = liquid_crystal_calibration.LCChannelSettings(scope)
+    scope.hardwareChecks.append(scope.channel_settings.c_on_target)
     # TODO: Do I need a close() function?
 
 @init_gui('OIDIC')

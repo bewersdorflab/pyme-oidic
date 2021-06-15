@@ -60,10 +60,10 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
         pass
 
     def set_c(self, c_idx):
-        self.scope.frameWrangler.stop()
+        # self.scope.frameWrangler.stop()
         self.channel_settings.set_c(c_idx)
-        time.sleep(self.channel_settings._settling_time)
-        self.scope.frameWrangler.start()
+        # time.sleep(self.channel_settings._settling_time)
+        # self.scope.frameWrangler.start()
 
     def _init_t(self, time_settings):
         pass

@@ -76,7 +76,7 @@ class LCCalibrator(object):
         # Switch to the other shear direction
         self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 0)
         self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 1)
-        time.sleep(self.lc_ch_set._settling_time)
+        # time.sleep(self.lc_ch_set._settling_time)
         self.scope.frameWrangler.start()
 
     def on_frame(self, sender, frameData, **kwargs):
@@ -90,11 +90,11 @@ class LCCalibrator(object):
             self.scope.frameWrangler.start()
             wx.CallAfter(self.on_done)
         else:
-            self.scope.frameWrangler.stop()
+            # self.scope.frameWrangler.stop()
             #set new voltages
             self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 1)
-            time.sleep(self.lc_ch_set._settling_time)
-            self.scope.frameWrangler.start()
+            # time.sleep(self.lc_ch_set._settling_time)
+            # self.scope.frameWrangler.start()
             # update_progress_bar()
 
     def on_done(self):
@@ -146,6 +146,7 @@ class LCChannelSettings(object):
         self.scope = scope
         self.lc_driver = scope.lc_driver
         self._num_channels = 6
+        self.__c_time = time.time()
 
         # see if we've established an OIDIC dictionary
         with open(config_file,'r') as config_data:
@@ -334,6 +335,13 @@ class LCChannelSettings(object):
 
         self.lc_driver.set_dac_voltage(self._chan0[c_idx], 0)
         self.lc_driver.set_dac_voltage(self._chan1[c_idx], 1)
+        self.__c_time = time.time()
+
+    def c_on_target(self):
+        curr_time = time.time()
+        if (curr_time - self.__c_time) > self._settling_time:
+            return True
+        return False
 
     def set_bias(self, bias):
         self._lc_bias = bias
