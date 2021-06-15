@@ -71,10 +71,6 @@ def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg=None,
         Central wavelength used in imaging (nm).
     shear_distance : float
         Shear distance of recombining prism used in imaging (nm).
-    A0_bg : np.array, optional
-        Background for shear direction 0, by default None
-    A1_bg : np.array, optional
-        Background for shear direction 1, by default None
 
     Returns
     -------
@@ -83,10 +79,6 @@ def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg=None,
     azim : np.array
         Azimuth of OPL gradient
     """
-    if A0_bg is not None:
-        A0 = A0 - A0_bg
-    if A1_bg is not None:
-        A1 = A1 - A1_bg
 
     scale = wavelength/(2*np.pi*shear_distance)  #*np.sqrt(2)?
     atan_A0 = np.arctan(A0)  
@@ -151,9 +143,9 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     A0, A1 = calculate_A(image_stack, wavelength, bias, n_frames)
     if background_stack is not None:
         A0_bg, A1_bg = calculate_A(background_stack, wavelength, bias, n_frames)
-    else:
-        A0_bg, A1_bg = None, None
-    mag, azim = calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg, A1_bg)
+        A0 -= A0_bg
+        A1 -= A1_bg
+    mag, azim = calculate_magnitude_gradient(A0, A1, wavelength, shear_distance)
     
     ft_grad = np.fft.fft2(mag*np.exp(1j*azim), axes=(0,1))
     
