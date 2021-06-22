@@ -57,7 +57,7 @@ def calculate_A(image_stack, wavelength, bias, n_frames=6):
     A1[denom1 == 0] = 0
     return A0, A1
 
-def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg=None, A1_bg=None):
+def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance):
     """
     Calculate OIDIC gradient magnitude and azimuth.
 
@@ -80,11 +80,11 @@ def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance, A0_bg=None,
         Azimuth of OPL gradient
     """
 
-    scale = wavelength/(2*np.pi*shear_distance)  #*np.sqrt(2)?
+    scale = wavelength/(2*np.sqrt(2)*np.pi*shear_distance)  #*np.sqrt(2)?
     atan_A0 = np.arctan(A0)  
     atan_A1 = np.arctan(A1)  
     mag = scale*np.sqrt(atan_A0*atan_A0+atan_A1*atan_A1)
-    azim = np.arctan2(atan_A1,atan_A0)
+    azim = np.arctan2(atan_A0,atan_A1)
 
     return mag, azim
 
