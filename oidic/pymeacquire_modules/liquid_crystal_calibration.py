@@ -72,9 +72,9 @@ class LCCalibrator(object):
         self.i = 0
 
         self.scope.frameWrangler.stop()
-        self.scope.frameWrangler.onFrame.connect(self.on_frame)
         # Switch to the other shear direction
         self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 0)
+        self.scope.frameWrangler.onFrame.connect(self.on_frame)
         self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 1)
         # time.sleep(self.lc_ch_set._settling_time)
         self.scope.frameWrangler.start()
@@ -116,6 +116,7 @@ class LCCalibrator(object):
 
         self.scope.frameWrangler.stop()
         # Grab the mean values
+        self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 0)
         self.lc_ch_set.lc_driver.set_dac_voltage(min_v, 1)
         time.sleep(self.lc_ch_set._settling_time)
         self.scope.frameWrangler.start()
@@ -272,8 +273,12 @@ class LCChannelSettings(object):
 
         Note we do not call set_c here in case we are in the self.num_channels==4 case
         """
+
+        self.scope.frameWrangler.stop()
         self.lc_driver.set_dac_voltage(self._lc_voltage_dir0, 0)
         self.lc_driver.set_dac_voltage(self._lc_voltage_dir0_zero, 1)
+        time.sleep(self._settling_time)
+        self.scope.frameWrangler.start()
 
     def populate_bias_voltages(self):
         self._lc_voltage_dir0_zero_minus = 0
@@ -342,6 +347,9 @@ class LCChannelSettings(object):
         if (curr_time - self.__c_time) > self._settling_time:
             return True
         return False
+
+
+
 
     def set_bias(self, bias):
         self._lc_bias = bias

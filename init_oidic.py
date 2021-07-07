@@ -13,6 +13,7 @@ def pco_cam(scope):
 
     cam = PcoEdge42LT(0, debuglevel='extra verbose')
     cam.Init()
+    cam.SetAcquisitionMode(PcoEdge42LT.MODE_SINGLE_SHOT)
     #cam.SetIntegTime(0.025)  # 40 fps is max bandwidth for USB3.0 camera PcoEdge42LT
     # cam._mode = 0
     # flip and rotate on primary camera should always be false - make the stage match the camera reference frame instead
