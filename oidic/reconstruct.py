@@ -158,8 +158,17 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     fx = np.fft.fftfreq(lx)*otf_scale_x
     fy = np.fft.fftfreq(ly)*otf_scale_y
     wx, wy = np.meshgrid(fx, fy)
-    wx[(wx == 0) & (wy == 0)] = EPS  # Avoid wx = wy = 0 simutaneously
+
+    # lowpass
+    # NOTE: hard stop, apodize??
+    R = (wx*wx+wy*wy)
+    M = R > (2.0*numerical_aperture/wavelength)**2
+    wx[M], wy[M] = 0, 0
+
+    # Avoid wx = wy = 0 simutaneously
+    wx[(wx == 0) & (wy == 0)] = EPS
     wy[(wx == 0) & (wy == 0)] = EPS
+
     if reconstruction_type == 'integrate':
         fact = 1.0/(1j * (wx - 1j * wy))
     elif reconstruction_type == 'riesz':
