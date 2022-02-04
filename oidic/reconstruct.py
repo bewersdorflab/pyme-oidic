@@ -21,7 +21,7 @@ def calculate_A(image_stack, wavelength, bias, n_frames=6):
     Returns
     -------
     A0 : np.array
-        XYZT array representing gradient component of shear direction 0 (-45)
+        XYZT array representing gradient component of shear direction 0 (+45)
     A1 : np.array
         XYZT array representing gradient component of shear direction 1 (-45)
     """
@@ -64,7 +64,7 @@ def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance):
     Parameters
     ----------
     A0 : np.array
-        XYZT array representing gradient component of shear direction 0 (-45)
+        XYZT array representing gradient component of shear direction 0 (+45)
     A1 : np.array
         XYZT array representing gradient component of shear direction 1 (-45)
     wavelength : float
@@ -89,7 +89,8 @@ def calculate_magnitude_gradient(A0, A1, wavelength, shear_distance):
     return mag, azim
 
 def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_aperture,
-                background_stack=None, n_frames=6, reconstruction_type='integrate'):
+                background_stack=None, n_frames=6, reconstruction_type='integrate',
+                shear_bias=0):
     """
     Reconstruct OIDIC images--either OPL or Riesz transform.
     
@@ -98,20 +99,20 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     4-frame
     c    dir     bias
     -----------------
-    0    -45    -bias
-    1    -45    +bias
-    2    +45    -bias
-    3    +45    +bias
+    0    +45    -bias
+    1    +45    +bias
+    2    -45    -bias
+    3    -45    +bias
 
     6-frame
     c    dir     bias
     -----------------
-    0    -45    -bias
-    1    -45    0
-    2    -45    +bias
-    3    +45    -bias
-    4    +45    0
-    5    +45    +bias
+    0    +45    -bias
+    1    +45    0
+    2    +45    +bias
+    3    -45    -bias
+    4    -45    0
+    5    -45    +bias
 
     Parameters
     ----------
@@ -132,6 +133,9 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     reconstruction_type : string, optional
         Method to use to reconstruct the OIDIC image: 'integrate' or 
         'riesz', by default 'integrate'
+    shear_bias : float
+        Angle between second shear direction and the starting axis for
+        measuring azimuth (rad)
 
     Returns
     -------
@@ -147,7 +151,7 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
         A1 -= A1_bg
     mag, azim = calculate_magnitude_gradient(A0, A1, wavelength, shear_distance)
     
-    ft_grad = np.fft.fft2(mag*np.exp(1j*azim), axes=(0,1))
+    ft_grad = np.fft.fft2(mag*np.exp(1j*(azim-shear_bias)), axes=(0,1))
     
     lx, ly = image_stack.data_xyztc.shape[0], image_stack.data_xyztc.shape[1]
     dx, dy = image_stack.voxelsize_nm.x, image_stack.voxelsize_nm.y
