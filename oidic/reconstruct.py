@@ -163,11 +163,13 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     fy = np.fft.fftfreq(ly)*otf_scale_y
     wx, wy = np.meshgrid(fx, fy)
 
+    """
     # lowpass
     # NOTE: hard stop, apodize??
     R = (wx*wx+wy*wy)
     M = R > (2.0*numerical_aperture/wavelength)**2
     wx[M], wy[M] = 0, 0
+    """
 
     # Avoid wx = wy = 0 simutaneously
     wx[(wx == 0) & (wy == 0)] = EPS
