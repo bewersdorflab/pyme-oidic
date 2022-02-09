@@ -1,6 +1,7 @@
 import numpy as np
 
-def simulate_phase_square(pixel_size, chip_size, wl, w, n1, n2, thick):
+def simulate_phase_square(pixel_size, chip_size, wl, w, n1, n2, \
+                          full_thick, sample_thick):
     """
     Build a simulated phase object in a square shape, 
     consisting of a sample and background
@@ -14,13 +15,15 @@ def simulate_phase_square(pixel_size, chip_size, wl, w, n1, n2, thick):
     wl : float
         Wavelength of emitted light in nm   
     w: float
-        Width in x and y direction of the sample
+        Width in x and y direction of the sample in nm
     n1: float
         Background refractive index
     n2: float
         Sample refractive index
-    thick: float
-        Object thickness
+    full_thick: float
+        Full object thickness in nm
+    sample_thick: float 
+        Sample thickness in nm
     
     Returns
     -------
@@ -37,8 +40,10 @@ def simulate_phase_square(pixel_size, chip_size, wl, w, n1, n2, thick):
     y = x
     X, Y = np.meshgrid(x, y)
     
-    sm = np.ones_like(X)*n1*2*np.pi*thick/wl
-    sm[(Y>=-w)&(Y<=w)&(X>=-w)&(X<=w)] *= n2/n1
-    bg = np.ones_like(X)*n1*2*np.pi*thick/wl
+    sm = np.ones_like(X)*n1*2*np.pi*full_thick/wl
+    sm[(Y>=-w)&(Y<=w)&(X>=-w)&(X<=w)] *= n2/n1*sample_thick/full_thick+\
+                                            (1-sample_thick/full_thick)
+    bg = np.ones_like(X)*n1*2*np.pi*full_thick/wl
     
     return sm, bg
+    
