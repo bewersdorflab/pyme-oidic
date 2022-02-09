@@ -80,7 +80,7 @@ def amplitude_dic_psf(x, y, wl, NA, n, shear_distance, shear_angle, bias):
     NA : float
         Numerical aperture of the optical system
     shear_distance : float
-        Shear distance in nm
+        Shear distance of a single recombinging prism in nm
     shear_angle : float
         Shear angle in rad
     bias : float
@@ -119,7 +119,7 @@ def amplitude_dic_otf(fx, fy, wl, NA, n, shear_distance, shear_angle, bias):
     NA : float
         Numerical aperture of the optical system
     shear_distance : float
-        Shear distance in nm
+        Shear distance of a single recombinging prism in nm
     shear_angle : float
         Shear angle in rad
     bias : float
@@ -138,10 +138,10 @@ def amplitude_dic_otf(fx, fy, wl, NA, n, shear_distance, shear_angle, bias):
     
     return H
 
-def plot_amplitude_dic_psf_2d(pixel_size, chip_size,\
+def sampled_amplitude_dic_psf_2d(pixel_size, chip_size,\
                               wl, NA, n, shear_distance, shear_angle, bias):
     """
-    Construct and plot the electric field for an amplitude DIC PSF in 2D
+    Construct the electric field for an amplitude DIC PSF in 2D
     based on the camera we have.
     
     Parameters
@@ -159,12 +159,8 @@ def plot_amplitude_dic_psf_2d(pixel_size, chip_size,\
         
     Returns
     -------
-    psf_real : np.array 
-        Array of the real part of the PSF
-    psf_imag : np.array
-        Array of the imaginary part of the PSF
-    Plot of real and imaginary values of PSF with a sampling rate 
-    of our imaging system
+    psf : np.array
+        Array of np.complex value of the PSF
     """
     
     # Sampling
@@ -177,28 +173,13 @@ def plot_amplitude_dic_psf_2d(pixel_size, chip_size,\
     
     # Get the PSF
     psf = amplitude_dic_psf(X, Y, wl, NA, n, shear_distance, shear_angle, bias)
-    psf_real = psf.real
-    psf_imag = psf.imag
     
-    # Plot
-    mid = int(chip_size/2)
-    fig = plt.figure(figsize=(20,10))
-    plt.subplot(121)
-    plt.imshow(psf_real[mid-50:mid+50,mid-50:mid+50], cmap=plt.cm.gray)
-    plt.title('Amplitude DIC PSF Real Part')
-    plt.colorbar()
-    plt.subplot(122)
-    plt.imshow(psf_imag[mid-50:mid+50,mid-50:mid+50], cmap=plt.cm.gray)
-    plt.title('Amplitude DIC PSF Imaginary Part')
-    plt.colorbar()
-    plt.show()
-    
-    return psf_real, psf_imag
+    return psf
 
-def plot_amplitude_dic_otf_2d(pixel_size, chip_size,\
+def sampled_amplitude_dic_otf_2d(pixel_size, chip_size,\
                               wl, NA, n, shear_distance, shear_angle, bias):
     """
-    Construct and plot the electric field for an amplitude DIC PSF in 2D
+    Construct the electric field for an amplitude DIC PSF in 2D
     based on the camera we have.
     
     Parameters
@@ -216,12 +197,8 @@ def plot_amplitude_dic_otf_2d(pixel_size, chip_size,\
         
     Returns
     -------
-    otf_real : np.array 
-        Array of the real part of the PSF
-    otf_imag : np.array
-        Array of the imaginary part of the PSF
-    Plot of real and imaginary values of OTF with a sampling rate 
-    of our imaging system
+    otf : np.array 
+        Array of np.complex value of the PSF
     """
     
     # Sampling
@@ -234,25 +211,10 @@ def plot_amplitude_dic_otf_2d(pixel_size, chip_size,\
     
     # Get the OTF
     otf = amplitude_dic_otf(FX, FY, wl, NA, n, shear_distance, shear_angle, bias)
-    otf_real = otf.real
-    otf_imag = otf.imag
     
-    # Plot
-    mid = int(chip_size/2)
-    fig = plt.figure(figsize=(20,10))
-    plt.subplot(121)
-    plt.imshow(otf_real, cmap=plt.cm.gray)
-    plt.title('Amplitude DIC PSF Real Part')
-    plt.colorbar()
-    plt.subplot(122)
-    plt.imshow(otf_imag, cmap=plt.cm.gray)
-    plt.title('Amplitude DIC PSF Imaginary Part')
-    plt.colorbar()
-    plt.show()
-    
-    return otf_real, otf_imag
+    return otf
 
-def coherent_image_model(phase_func, pixel_size, chip_size, wl, NA, n, \
+def coherent(phase_func, pixel_size, chip_size, wl, NA, n, \
                          shear_distance, shear_angle_1, shear_angle_2, bias):
     """
     Using fft method to convolve the phase object with the DIC PSF
@@ -286,7 +248,7 @@ def coherent_image_model(phase_func, pixel_size, chip_size, wl, NA, n, \
     NA : float
         Numerical aperture of the optical system
     shear_distance : float
-        Shear distance in nm
+        Shear distance of a single recombinging prism in nm
     shear_angle_1 : float
         First shear angle in rad
     shear_angle_2 : float
@@ -298,8 +260,6 @@ def coherent_image_model(phase_func, pixel_size, chip_size, wl, NA, n, \
     -------
     image_stack : PYME.IO.image.ImageStack
         A stack of 6-frame simulated DIC images
-    Plot the simulated image stack in the sequence 0-5
-    from left to right, top to bottome
     """
     
     # Sampling
@@ -360,114 +320,9 @@ def coherent_image_model(phase_func, pixel_size, chip_size, wl, NA, n, \
     stack.set_dim_order_and_size('XYCZT',size_z=1,size_t=1,size_c=6)
     image_stack = ImageStack(stack)
     
-    # Plot the image stack
-    fig = plt.figure(figsize=(20,10))
-    plt.subplot(231)
-    plt.imshow(image_stack.data_xyztc[:,:,0,0,0], cmap=plt.cm.gray)
-    plt.colorbar()
-    plt.subplot(232)
-    plt.imshow(image_stack.data_xyztc[:,:,0,0,1], cmap=plt.cm.gray)
-    plt.colorbar()
-    plt.subplot(233)
-    plt.imshow(image_stack.data_xyztc[:,:,0,0,2], cmap=plt.cm.gray)
-    plt.colorbar()
-    plt.subplot(234)
-    plt.imshow(image_stack.data_xyztc[:,:,0,0,3], cmap=plt.cm.gray)
-    plt.colorbar()
-    plt.subplot(235)
-    plt.imshow(image_stack.data_xyztc[:,:,0,0,4], cmap=plt.cm.gray)
-    plt.colorbar()
-    plt.subplot(236)
-    plt.imshow(image_stack.data_xyztc[:,:,0,0,5], cmap=plt.cm.gray)
-    plt.colorbar()
-
-    plt.show()
-    
-    return image_stack
-
-def simulate_reconstruct(pixel_size, chip_size, \
-                         image_stack, wavelength, bias, \
-                         shear_distance, numerical_aperture,\
-                         background_stack=None, n_frames=6, \
-                         reconstruction_type='integrate', shear_bias=0):
-    """
-    Reconstructed OIDIC images based on simulated DIC image stacks.
-    
-    Simulated DIC image stacks are expected to have the following 
-    order in the channel column.
-    
-    6-frame
-    c    dir        bias
-    --------------------
-    0    +3pi/2    -bias
-    1    +3pi/2    0
-    2    +3pi/2    +bias
-    3    +pi       -bias
-    4    +pi       0
-    5    +pi       +bias
-    
-    Parameters
-    ----------
-    pixel_size : float
-        Effective pixel size of camera chip in nm
-    chip_size : int
-        How many pixels on the camera chip
-    image_stack : PYME.io.image.ImageStack
-        Image stack containing raw simulated sample DIC images for OIDIC stack
-    wavelength : float
-        Central wavelength used in imaging (nm)
-    bias : float
-        Bias used in imaging (wavelength)
-    shear_distance : float
-        Shear distance of recombining prism used in imaging (nm)
-    numerical_aperture : float
-        Numerical aperture of the acquiring system
-    background_stack : PYME.io.image.ImageStack
-        Image stack containing raw simulated background DIC images for OIDIC stack
-    n_frames : int, optional
-        Number of frames (4 or 6), by default 6
-    reconstruction_type : string, optional
-        Method to use to reconstruct the OIDIC image: 'integrate' or 
-        'riesz', by default 'integrate'
-    shear_bias : float
-        Angle between second shear direction and the starting axis for
-        measuring azimuth (rad)
-        
-    Returns
-    -------
-    oidic : np.array
-        4D XYZT array of reconstructed OIDIC image
-    Plot the grayscale reconstructed OPL map, and plot the line profile
-    across the center of the OPL map in horizontal direction
-    """
-    
-    # Set metadata, in [um]
+    # Set the metadata
     image_stack.mdh.setEntry('voxelsize.x', pixel_size/1e3)
     image_stack.mdh.setEntry('voxelsize.y', pixel_size/1e3)
     
-    # Use the standard reconstruction code
-    oidic = reconstruct.reconstruct(image_stack, wavelength, bias, \
-                         shear_distance, numerical_aperture,\
-                         background_stack=None, n_frames=6, \
-                         reconstruction_type='integrate', shear_bias=0)
+    return image_stack
     
-    # Plot
-    duration = pixel_size * chip_size
-    N = chip_size
-    sample_rate = N / duration
-    x = np.linspace(-duration/2, duration/2, N)
-    y = x
-    X, Y = np.meshgrid(x, y)
-    plt.figure(figsize=(8,8))
-    plt.imshow(oidic.squeeze(), cmap=plt.cm.gray)
-    plt.colorbar()
-    plt.title('Reconstructed OIDIC OPL map')
-    plt.show()
-    plt.plot(y, oidic.squeeze()[int(chip_size/2),:])
-    plt.grid()
-    plt.title('Line profile across the center in horizontal direction')
-    plt.xlabel('x (nm)')
-    plt.ylabel('OPL (nm)')
-    plt.show()
-    
-    return oidic
