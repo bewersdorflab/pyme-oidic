@@ -151,7 +151,7 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
         A1 -= A1_bg
     mag, azim = calculate_magnitude_gradient(A0, A1, wavelength, shear_distance)
     
-    ft_grad = np.fft.fft2(mag*np.exp(1j*(azim-shear_bias)), axes=(0,1))
+    ft_grad = np.fft.fft2(mag*np.exp(1j*(azim+shear_bias)), axes=(0,1))
     
     lx, ly = image_stack.data_xyztc.shape[0], image_stack.data_xyztc.shape[1]
     dx, dy = image_stack.voxelsize_nm.x, image_stack.voxelsize_nm.y
