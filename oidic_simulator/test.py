@@ -24,24 +24,6 @@ def test_reconstruction_phase_square():
     tau2 = np.pi                         # shear angle 2 [rad]
     d = 70                           # shear distance [nm]
     bias = 0.15                     # bias in [wavelength]# Sampling parameters
-    pixel_size = 64.5 
-    chip_size = 500   
-
-    # Simulated object parameters
-    n2 = 1.56
-    n1 = 1.52
-    w = 6000
-    full_thick = 800
-    sample_thick = 500
-
-    # Imaging parameters
-    wl = 530                           # wavelength [nm]
-    NA = 1.35                           # numerical aperture
-    n = 1.0                              # refractive index surrounding the point source
-    tau1 = 3*np.pi/2                 # shear angle 1 [rad]
-    tau2 = np.pi                         # shear angle 2 [rad]
-    d = 12                           # shear distance [nm]
-    bias = 0.15                     # bias in [wavelength]
 
     # Simulate image
     sm, bg = phase_objects.simulate_phase_square(pixel_size, chip_size, wl, w, n1, n2, \
