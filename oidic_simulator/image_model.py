@@ -167,7 +167,8 @@ def sampled_amplitude_dic_psf_2d(pixel_size, chip_size,\
     duration = pixel_size * chip_size
     N = chip_size
     sample_rate = N / duration
-    x = np.linspace(-duration/2, duration/2, N)
+    x = np.arange(-duration/2, duration/2+1e-6, pixel_size)
+    x = 0.5*(x[1:] + x[:-1])
     X, Y = np.meshgrid(x, x)
     
     # Get the PSF
@@ -204,7 +205,8 @@ def sampled_amplitude_dic_otf_2d(pixel_size, chip_size,\
     duration = pixel_size * chip_size
     N = chip_size
     sample_rate = N / duration
-    fx = np.arange(-sample_rate/2, sample_rate/2, 1/duration)
+    fx = np.arange(-sample_rate/2, sample_rate/2+1e-6/duration, 1/duration)
+    fx = 0.5*(fx[1:] + fx[:-1])
     FX, FY = np.meshgrid(fx, fx)
     
     # Get the OTF
@@ -263,7 +265,8 @@ def coherent(phase_array, pixel_size, chip_size, wl, NA, n, bias, \
     duration = pixel_size * chip_size
     N = chip_size
     sample_rate = N / duration
-    x = np.linspace(-duration/2, duration/2, N)
+    x = np.arange(-duration/2, duration/2+1e-6, pixel_size)
+    x = 0.5*(x[1:] + x[:-1])
     X, Y = np.meshgrid(x, x)
     fact = (x[1]-x[0])**4    # scaling factor of the convolution
     

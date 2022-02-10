@@ -15,7 +15,7 @@ def simulate_phase_square(pixel_size, chip_size, wl, w, n1, n2, \
     wl : float
         Wavelength of emitted light in nm   
     w: float
-        Width in x and y direction of the sample in nm
+        Half width in x and y direction of the sample in nm
     n1: float
         Background refractive index
     n2: float
