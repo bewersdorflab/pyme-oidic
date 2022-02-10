@@ -1,7 +1,6 @@
 from oidic import reconstruct
-import matplotlib.pyplot as plt
 import numpy as np
-from oidic_simulator import image_model, phase_objects
+from oidic import image_model, phase_objects
 
 def test_reconstruct_phase_square():
 
