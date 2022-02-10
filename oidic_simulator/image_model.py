@@ -30,7 +30,8 @@ def pupil(fx, fy, wl, NA, n):
     """
     
     fc = NA/(n*wl)   # cutoff frequency
-    p = np.select([fx*fx+fy*fy<=fc*fc, fx*fx+fy*fy>fc*fc], [1, 0])
+    p = np.ones_like(fx)
+    p[fx*fx+fy*fy>fc*fc] = 0
     
     return p
 
@@ -58,7 +59,8 @@ def coherent_amplitude_psf(x, y, wl, NA, n):
     """
     
     fc = NA/(n*wl)    # cutoff frequency
-    k = fc*sp.jv(1, 2*np.pi*fc*np.sqrt(x**2+y**2))/np.sqrt(x**2+y**2)
+    r2 = np.sqrt(x**2 +y**2)
+    k = fc*sp.jv(1, 2*np.pi*fc*r2)/r2
     
     return k
 
@@ -92,14 +94,12 @@ def amplitude_dic_psf(x, y, wl, NA, n, shear_distance, shear_angle, bias):
         Array of np.complex values describing electric field of the PSF
     """
     
-    d = shear_distance
-    tau = shear_angle
     gama = bias * 2*np.pi  # bias in rad
-    k1 = coherent_amplitude_psf(x*np.cos(tau)-y*np.sin(tau)-d/2, x*np.sin(tau)+y*np.cos(tau),\
-                                wl, NA, n)
-    k2 = coherent_amplitude_psf(x*np.cos(tau)-y*np.sin(tau)+d/2, x*np.sin(tau)+y*np.cos(tau),\
-                                wl, NA, n)
-    h = 0.5*np.exp(-1j*gama/2)*k1 - 0.5*np.exp(1j*gama/2)*k2  
+    k1 = coherent_amplitude_psf(x*np.cos(shear_angle)-y*np.sin(shear_angle)-shear_distance/2, \
+                                x*np.sin(shear_angle)+y*np.cos(shear_angle), wl, NA, n)
+    k2 = coherent_amplitude_psf(x*np.cos(shear_angle)-y*np.sin(shear_angle)+shear_distance/2, \
+                                x*np.sin(shear_angle)+y*np.cos(shear_angle), wl, NA, n)
+    h = 0.5*np.exp(-1j*gama/2)*k1 - 0.5*np.exp(1j*gama/2)*k2   
     
     return h
 
@@ -168,8 +168,7 @@ def sampled_amplitude_dic_psf_2d(pixel_size, chip_size,\
     N = chip_size
     sample_rate = N / duration
     x = np.linspace(-duration/2, duration/2, N)
-    y = x
-    X, Y = np.meshgrid(x, y)
+    X, Y = np.meshgrid(x, x)
     
     # Get the PSF
     psf = amplitude_dic_psf(X, Y, wl, NA, n, shear_distance, shear_angle, bias)
@@ -206,16 +205,15 @@ def sampled_amplitude_dic_otf_2d(pixel_size, chip_size,\
     N = chip_size
     sample_rate = N / duration
     fx = np.arange(-sample_rate/2, sample_rate/2, 1/duration)
-    fy = fx
-    FX, FY = np.meshgrid(fx, fy)
+    FX, FY = np.meshgrid(fx, fx)
     
     # Get the OTF
     otf = amplitude_dic_otf(FX, FY, wl, NA, n, shear_distance, shear_angle, bias)
     
     return otf
 
-def coherent(phase_func, pixel_size, chip_size, wl, NA, n, \
-                         shear_distance, shear_angle_1, shear_angle_2, bias):
+def coherent(phase_array, pixel_size, chip_size, wl, NA, n, bias, \
+                         shear_distance, shear_angle_1=3*np.pi/2, shear_angle_2=np.pi):
     """
     Using fft method to convolve the phase object with the DIC PSF
     to get its DIC image intensity profile.
@@ -223,20 +221,19 @@ def coherent(phase_func, pixel_size, chip_size, wl, NA, n, \
     Simulated DIC image stacks are expected to have the following 
     order in the channel column.
     
-    6-frame
-    c    dir        bias
+    c         dir           bias
     --------------------
-    0    +3pi/2    -bias
-    1    +3pi/2    0
-    2    +3pi/2    +bias
-    3    +pi       -bias
-    4    +pi       0
-    5    +pi       +bias
+    0    +shear_angle_1    -bias
+    1    +shear_angle_1    0
+    2    +shear_angle_1    +bias
+    3    +shear_angle_2    -bias
+    4    +shear_angle_2    0
+    5    +shear_angle_2    +bias
     
     Parameters
     ----------
-    phase_func : complex
-        Phase function of the sample object 
+    phase_array : np.array
+        Array of phase delay when light pass through the sample object 
     pixel_size : float
         Effective pixel size of camera chip in nm
     chip_size : int
@@ -267,13 +264,10 @@ def coherent(phase_func, pixel_size, chip_size, wl, NA, n, \
     N = chip_size
     sample_rate = N / duration
     x = np.linspace(-duration/2, duration/2, N)
-    y = x
-    X, Y = np.meshgrid(x, y)
-    fact = ((x[1]-x[0])*(y[1]-y[0]))**2    # scaling factor of the convolution
+    X, Y = np.meshgrid(x, x)
+    fact = (x[1]-x[0])**4    # scaling factor of the convolution
     
     # Generate 6-frame images
-    shear_angle_1 = 3*np.pi/2
-    shear_angle_2 = np.pi    # use the value our system has for simulation
     gama = bias * 2*np.pi   # bias in rad
     a = 1                  # normalized light source intensity
     h0 = amplitude_dic_psf(X, Y, wl, NA, n, \
@@ -289,22 +283,22 @@ def coherent(phase_func, pixel_size, chip_size, wl, NA, n, \
     h5 = amplitude_dic_psf(X, Y, wl, NA, n, \
                            np.sqrt(2)*shear_distance, shear_angle_2, bias)
     
-    image_amplitude0 = signal.fftconvolve(np.exp(-1j*phase_func), h0, mode='same')
+    image_amplitude0 = signal.fftconvolve(np.exp(-1j*phase_array), h0, mode='same')
     I0 = a * np.abs(image_amplitude0)**2 * fact
     
-    image_amplitude1 = signal.fftconvolve(np.exp(-1j*phase_func), h1, mode='same')
+    image_amplitude1 = signal.fftconvolve(np.exp(-1j*phase_array), h1, mode='same')
     I1 = a * np.abs(image_amplitude1)**2 * fact
     
-    image_amplitude2 = signal.fftconvolve(np.exp(-1j*phase_func), h2, mode='same')
+    image_amplitude2 = signal.fftconvolve(np.exp(-1j*phase_array), h2, mode='same')
     I2 = a * np.abs(image_amplitude2)**2 * fact
     
-    image_amplitude3 = signal.fftconvolve(np.exp(-1j*phase_func), h3, mode='same')
+    image_amplitude3 = signal.fftconvolve(np.exp(-1j*phase_array), h3, mode='same')
     I3 = a * np.abs(image_amplitude3)**2 * fact
     
-    image_amplitude4 = signal.fftconvolve(np.exp(-1j*phase_func), h4, mode='same')
+    image_amplitude4 = signal.fftconvolve(np.exp(-1j*phase_array), h4, mode='same')
     I4 = a * np.abs(image_amplitude4)**2 * fact
     
-    image_amplitude5 = signal.fftconvolve(np.exp(-1j*phase_func), h5, mode='same')
+    image_amplitude5 = signal.fftconvolve(np.exp(-1j*phase_array), h5, mode='same')
     I5 = a * np.abs(image_amplitude5)**2 * fact
     
     # Stack those images
