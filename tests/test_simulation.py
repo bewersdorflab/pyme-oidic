@@ -16,9 +16,9 @@ def test_reconstruct_phase_square():
     sample_thick = 500
     
     # Test for 10 times
-    test_loop= 0
+    test_loop = 0
     deviation = []
-    while test_loop<10:
+    while test_loop < 10:
         test_loop += 1
         
         # Imaging parameters randamized
@@ -27,7 +27,7 @@ def test_reconstruct_phase_square():
         n = np.random.uniform(1, 2)                   # refractive index surrounding the point source
         tau1 = np.random.uniform(0, 1)*2*np.pi            # shear angle 1 [rad]
         tau2 = tau1 - np.pi/2                            # shear angle 2 [rad]
-        d = np.random.randint(50, 200)                   # shear distance [nm]
+        d = np.random.randint(50, 0.61*500/1.5/np.sqrt(2))       # shear distance [nm]
         bias = np.random.uniform(0.01, 0.5)             # bias in [wavelength]
 
         # Simulate image
@@ -46,18 +46,11 @@ def test_reconstruct_phase_square():
                         shear_bias=tau2-np.pi)
 
         # Test
-        bound1 = int(np.floor(chip_size/2) - np.ceil(w/pixel_size))
-        bound2 = int(np.ceil(chip_size/2) + np.ceil(w/pixel_size))
-        opl_bg = (np.mean(opl.squeeze()[bound1:bound2, bound1-10:bound1]) + \
-                          np.mean(opl.squeeze()[bound1:bound2, bound2:bound2+10]) + \
-                          np.mean(opl.squeeze()[bound1-10:bound1, bound1:bound2]) + \
-                          np.mean(opl.squeeze()[bound2:bound2+10, bound1:bound2]))/4
-        deviation.append(np.abs((np.max(opl.squeeze())-opl_bg)- (n2-n1)*sample_thick))
+        resolution = 0.61*wl/NA
+        max_ind = int(int((chip_size-0.5)//2) - np.floor((w-resolution)/pixel_size))
+        min_ind = int(int((chip_size-0.5)//2) - np.floor((w+resolution)/pixel_size))
+        opl_subtract_bg = opl.squeeze()[int((chip_size-0.5)//2), max_ind] - \
+                          opl.squeeze()[int((chip_size-0.5)//2), min_ind]
+        deviation.append(np.abs(opl_subtract_bg - sample_thick*(n2-n1)))
 
-    return deviation
-
-def test_answer():
-
-    assert test_reconstruct_phase_square() < [4,4,4,4,4,4,4,4,4,4]
-        
-
+    assert (np.all(np.array(deviation) < 4*np.ones(10)))
