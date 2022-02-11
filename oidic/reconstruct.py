@@ -151,7 +151,7 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
         A1 -= A1_bg
     mag, azim = calculate_magnitude_gradient(A0, A1, wavelength, shear_distance)
     
-    ft_grad = np.fft.fft2(mag*np.exp(1j*(azim-shear_bias)), axes=(0,1))
+    ft_grad = np.fft.fft2(mag*np.exp(1j*(azim+shear_bias)), axes=(0,1))
     
     lx, ly = image_stack.data_xyztc.shape[0], image_stack.data_xyztc.shape[1]
     dx, dy = image_stack.voxelsize_nm.x, image_stack.voxelsize_nm.y
@@ -163,11 +163,13 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     fy = np.fft.fftfreq(ly)*otf_scale_y
     wx, wy = np.meshgrid(fx, fy)
 
+    """
     # lowpass
     # NOTE: hard stop, apodize??
     R = (wx*wx+wy*wy)
     M = R > (2.0*numerical_aperture/wavelength)**2
     wx[M], wy[M] = 0, 0
+    """
 
     # Avoid wx = wy = 0 simutaneously
     wx[(wx == 0) & (wy == 0)] = EPS
