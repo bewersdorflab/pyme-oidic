@@ -178,7 +178,7 @@ def reconstruct(image_stack, wavelength, bias, shear_distance, numerical_apertur
     if reconstruction_type == 'integrate':
         fact = 1.0/(1j * (wx - 1j * wy))
     elif reconstruction_type == 'riesz':
-        fact = (wx - 1j*wy)/(1j*np.sqrt(wx*wx+wy*wy))
+        fact = (wx + 1j*wy)/(1j*np.sqrt(wx*wx+wy*wy))
     
     integrated = ft_grad*fact[:,:,None,None]
     oidic = np.real(np.fft.ifft2(integrated, axes=(0,1)))
