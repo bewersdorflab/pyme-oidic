@@ -53,7 +53,7 @@ class LCCalibrator(object):
         self.volts_to_check = None
         self.means = None
         self.i = 0
-        self.num_calibrations = 10
+        self.num_calibrations = 100
 
         self.dir0_zero_mean = 0
 
@@ -65,20 +65,106 @@ class LCCalibrator(object):
         # Grab this mean as a sanity check
         self.dir0_zero_mean = self.scope.frameWrangler.currentFrame.mean()
 
-        self.volts_to_check = np.linspace(self.lc_ch_set._lc_voltage_dir0_zero-1.0, 
-                                          self.lc_ch_set._lc_voltage_dir0_zero+1.0, 
+        self.volts_to_check = np.linspace(self.lc_ch_set._lc_voltage_dir0_zero-0.75, 
+                                          self.lc_ch_set._lc_voltage_dir0_zero+0.75, 
                                           self.num_calibrations)
         self.means = np.zeros_like(self.volts_to_check)
         self.i = 0
+
+        self.L = 2.5
+        self.R = 3.0
+        self.is_right = False
+        self.mean_L = 0
+        self.mean_R = 0
 
         self.scope.frameWrangler.stop()
         # Switch to the other shear direction
         self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 0)
         self.scope.frameWrangler.onFrame.connect(self.on_frame)
-        self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 1)
+        #self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 1)
+        # self.lc_ch_set.lc_driver.set_dac_voltage(self.L, 1)
         # time.sleep(self.lc_ch_set._settling_time)
         self.scope.frameWrangler.start()
+    """
+    def on_frame(self, sender, frameData, **kwargs):
 
+        if self.is_right:
+            # move to right voltage
+            # do something with both left and right mean
+
+            self.lc_ch_set.lc_driver.set_dac_voltage(self.R, 1)
+            # wait for liquid crystal to finish moving to set voltage
+            time.sleep(self.lc_ch_set._settling_time)
+            self.mean_R = frameData.mean()
+
+            if (self.R-self.L) >= 0.005:
+
+                if self.mean_L>self.mean_R:
+                    self.L = (self.L+self.R)/2
+                else:
+                    self.R = (self.L+self.R)/2
+            
+            else:
+                # voltage saved in self.means[0], 
+                # corresponding mean value saved in self.means[1]
+                self.means[0] = round((self.L+self.R)/2, 2)
+                #self.lc_ch_set.lc_driver.set_dac_voltage((self.L+self.R)/2, 1)
+                # wait for liquid crystal to finish moving to set voltage
+                #time.sleep(self.lc_ch_set._settling_time)
+                #self.means[1] = frameData.mean()
+            
+                self.scope.frameWrangler.stop()
+                self.scope.frameWrangler.onFrame.disconnect(self.on_frame)
+                self.scope.frameWrangler.start()
+                wx.CallAfter(self.on_done)
+        else:
+            # move to left voltage
+            self.lc_ch_set.lc_driver.set_dac_voltage(self.L, 1)
+
+            # wait for liquid crystal to finish moving to set voltage
+            time.sleep(self.lc_ch_set._settling_time)
+
+            # collect the mean value
+            self.mean_L =  frameData.mean()
+
+        # toggle between left and right
+        self.is_right = 1-self.is_right
+
+    def on_done(self):
+        
+        min_v = self.means[0]
+
+        #plt.figure()
+        #plt.scatter(self.means[0], self.means[1])
+        #plt.plot(self.means[0:2], np.poly1d(res)(self.means[0:2]))
+        #plt.xlabel('Volts')
+        #plt.ylabel('Image mean intensity')
+        #plt.title('Voltage calibration')
+
+        # record the minimum voltage
+        self.lc_ch_set.set_lc_voltage_dir1_zero(min_v)
+
+        self.scope.frameWrangler.stop()
+        # Grab the mean values
+        self.lc_ch_set.lc_driver.set_dac_voltage(self.lc_ch_set._lc_voltage_dir1, 0)
+        self.lc_ch_set.lc_driver.set_dac_voltage(min_v, 1)
+        time.sleep(self.lc_ch_set._settling_time)
+        self.scope.frameWrangler.start()
+        dir1_zero_mean = self.scope.frameWrangler.currentFrame.mean()
+
+
+        self.on_calibrated.send(self)
+
+
+
+        # Alert the user to the mean values (should be equal)
+        dialog = wx.MessageDialog(None, 
+                                  f"Dir 0 Mean: {self.dir0_zero_mean}"\
+                                  f"Dir 1 Mean: {dir1_zero_mean}", 
+                                  "Mean values should be roughly equivalent", wx.OK)
+        dialog.ShowModal()
+    """
+    
     def on_frame(self, sender, frameData, **kwargs):
         self.means[self.i] = frameData.mean()
         
@@ -100,7 +186,7 @@ class LCCalibrator(object):
     def on_done(self):
         # Fit a quadratic to find the minimum voltage using the smallest 3 values
         min_mean = np.argmin(self.means)
-        smallest_idxs = np.arange(min_mean-1, min_mean+2)
+        smallest_idxs = np.arange(np.maximum(min_mean-1,0), np.minimum(min_mean+2,self.means.shape[0]))
         res = np.polyfit(self.volts_to_check[smallest_idxs],self.means[smallest_idxs],2)
         min_v = round(-res[1]/(2*res[0]), 2)  # should be analytic, single zero
 
