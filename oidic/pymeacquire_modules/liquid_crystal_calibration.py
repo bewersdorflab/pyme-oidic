@@ -179,6 +179,8 @@ class LCCalibrator(object):
             # self.scope.frameWrangler.stop()
             #set new voltages
             self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 1)
+            #self.lc_ch_set.__c_time = time.time()
+            self.lc_ch_set._LCChannelSettings__c_time = time.time()
             # time.sleep(self.lc_ch_set._settling_time)
             # self.scope.frameWrangler.start()
             # update_progress_bar()
