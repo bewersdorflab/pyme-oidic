@@ -387,6 +387,12 @@ class LCChannelSettings(object):
             self._lc_voltage_dir1_zero_minus = self.interpolate_volts(self._lc_ret_dir1_zero_minus)
             self._lc_voltage_dir1_zero_plus = self.interpolate_volts(self._lc_ret_dir1_zero_plus)
 
+        # print the voltages
+        print(self._lc_voltage_dir0_zero_minus)
+        print(self._lc_voltage_dir0_zero_plus)
+        print(self._lc_voltage_dir1_zero_minus)
+        print(self._lc_voltage_dir1_zero_plus)
+
     def populate_chan_voltages(self):
         """
         Set liquid crystal voltages per imaging channel (4 or 6).
