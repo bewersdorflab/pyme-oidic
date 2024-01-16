@@ -106,6 +106,7 @@ class OIDICCalibrationFrame(wx.Frame):
     def _init_plots(self):
         """Initialize the plots to show ret vs. volts for two OIDIC shear directions.
         """
+        import matplotlib.backends.backend_wxagg
         self.figure = matplotlib.figure.Figure()
         plot_panel  = matplotlib.backends.backend_wxagg.FigureCanvasWxAgg(self,-1,self.figure)
         self.dir0 = self.figure.add_subplot(1,2,1)  # first shear direction 

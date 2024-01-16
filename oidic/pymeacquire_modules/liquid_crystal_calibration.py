@@ -179,6 +179,8 @@ class LCCalibrator(object):
             # self.scope.frameWrangler.stop()
             #set new voltages
             self.lc_ch_set.lc_driver.set_dac_voltage(self.volts_to_check[self.i], 1)
+            #self.lc_ch_set.__c_time = time.time()
+            self.lc_ch_set._LCChannelSettings__c_time = time.time()
             # time.sleep(self.lc_ch_set._settling_time)
             # self.scope.frameWrangler.start()
             # update_progress_bar()
@@ -384,6 +386,12 @@ class LCChannelSettings(object):
             self._lc_ret_dir1_zero_plus = self._lc_ret_dir1_zero + self._lc_bias
             self._lc_voltage_dir1_zero_minus = self.interpolate_volts(self._lc_ret_dir1_zero_minus)
             self._lc_voltage_dir1_zero_plus = self.interpolate_volts(self._lc_ret_dir1_zero_plus)
+
+        # print the voltages
+        print(self._lc_voltage_dir0_zero_minus)
+        print(self._lc_voltage_dir0_zero_plus)
+        print(self._lc_voltage_dir1_zero_minus)
+        print(self._lc_voltage_dir1_zero_plus)
 
     def populate_chan_voltages(self):
         """
