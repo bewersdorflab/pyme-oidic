@@ -435,6 +435,7 @@ class LCChannelSettings(object):
         self.lc_driver.set_dac_voltage(self._chan0[c_idx], 0)
         self.lc_driver.set_dac_voltage(self._chan1[c_idx], 1)
         self.__c_time = time.time()
+        self.current_channel = c_idx     # store the current channel for easy read out
 
     def c_on_target(self):
         curr_time = time.time()
