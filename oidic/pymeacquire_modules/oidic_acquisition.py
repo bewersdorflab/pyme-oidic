@@ -38,7 +38,7 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
 
         # Set some metadata
         self.storage.mdh['OIDIC.BackgroundImage'] = background_image
-        self.storage.mdh['NumChannels'] = self.channel_settings.num_channels
+        self.storage.mdh['NumChannels'] = self.channel_settings.num_channels  #FIXME - this should be saved automatically in the XTZTC metadata
 
     def on_frame(self, sender, frameData, **kwargs):
         # Overload xyztc frame data to do image averaging
