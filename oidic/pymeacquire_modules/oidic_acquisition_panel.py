@@ -8,6 +8,7 @@ from PYME.Acquire.ui import seqdialog
 from PYME.Acquire.xyztc import MemoryBackend
 
 from . import oidic_acquisition
+from PYME.Acquire import xyztc
 
 import wx
 import logging
@@ -82,6 +83,12 @@ class OIDICAcquisitionPanel(afp.foldingPane):
         if not hasattr(self.scope, 'stackSettings'):
             self.z_stepped.Disable()
 
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer.Add(wx.StaticText(pan, -1, "# Timepoints:"), 0, wx.ALL, 2)
+        self.tcNumTimepoints = wx.TextCtrl(pan, -1, value='1')
+        hsizer.Add(self.tcNumTimepoints, 0, wx.ALL, 2)
+        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
+
         # Go/stop buttons
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.b_go = wx.Button(pan, -1, 'Acquire Stack')
@@ -112,7 +119,8 @@ class OIDICAcquisitionPanel(afp.foldingPane):
 
         self.scope.oidic = oidic_acquisition.OIDICAcquisition(self.scope,
                                                               images_to_average=float(self.images_to_average.GetValue()),
-                                                              background_image=bool(self.background.GetValue()))
+                                                              background_image=bool(self.background.GetValue()),
+                                                              time_settings=xyztc.TimeSettings(num_timepoints=int(self.tcNumTimepoints.GetValue())))
         self.scope.oidic.on_series_end.connect(self.on_stack)
 
         self.scope.oidic.start()
