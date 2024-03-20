@@ -27,6 +27,8 @@ class ReconstructOIDIC(ModuleBase):
     def execute(self, namespace):
         from oidic import reconstruct
         from PYME.IO.image import ImageStack
+        from PYME.IO.DataSources import ArrayDataSource
+        from PYME.IO.DataSources import BaseDataSource
 
         image = namespace[self.image]
         if self.background_image is not None:
@@ -39,8 +41,10 @@ class ReconstructOIDIC(ModuleBase):
                                                  background_image, self.n_frames,
                                                  self.reconstruction_type)
         
-        opl = ImageStack(data=processed_data)  # TODO: add PYME.IO.DataSources.BaseDataSource.XYZTCWrapper?
+        #opl = ImageStack(data=processed_data)  # TODO: add PYME.IO.DataSources.BaseDataSource.XYZTCWrapper?
                                                # XYZTCWrapper(ArrayDataSource(processed_data), 'XYZTC', processed_data.shape[2], processed_data.shape[3], 1)
+        opl = BaseDataSource.XYZTCWrapper(ArrayDataSource.ArrayDataSource(processed_data), 'XYZTC', processed_data.shape[2], processed_data.shape[3], 1)
+        opl = ImageStack(opl)
         
         opl.mdh.copyEntriesFrom(image.mdh)
         opl.mdh['Parent'] = image.filename
