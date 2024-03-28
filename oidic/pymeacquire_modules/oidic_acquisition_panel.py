@@ -53,6 +53,7 @@ class OIDICAcquisitionPanel(wx.Panel, cascading_layout.CascadingLayoutMixin):
         hsizer.Add(self.background, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
         self.sample.SetValue(True)  # enable sample acqusition by default (why?)
+        self.background.Bind(wx.EVT_RADIOBUTTON, self.on_toggle_background)
 
         # bias (normalized to wavelength) applied to variable phase retarder
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -149,6 +150,8 @@ class OIDICAcquisitionPanel(wx.Panel, cascading_layout.CascadingLayoutMixin):
     def on_timepoints_change(self, event=None):
         self.scope.oidic_acquisition_settings.num_timepoints = int(self.tcNumTimepoints.GetValue())
 
+    def on_toggle_background(self, event=None):
+        self.scope.oidic_acquisition_settings.background_image = self.background.GetValue()
 
 class _OIDICAcquisitionPanel(afp.foldingPane):
     def __init__(self, parent, scope, **kwargs):
@@ -305,3 +308,5 @@ class _OIDICAcquisitionPanel(afp.foldingPane):
             # Save the current sequence length
             self._seq_length = self.scope.stackSettings.GetSeqLength()
             self.scope.stackSettings.SetSeqLength(1)
+
+    

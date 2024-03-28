@@ -13,6 +13,7 @@ class OIDICAcquisitionSettings(object):
         self.frames_to_average = 1
         self.z_stepped=False
         self.num_timepoints = 1
+        self.background_image = False # TODO - do we really want this in the settings??
 
 class OIDICAcquisition(xyztc.XYZTCAcquisition):
     def __init__(self, scope, dim_order='XYCZT', stack_settings=None, 
@@ -52,14 +53,20 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
 
         backend_kwargs['series_name'] = series_name
 
+        z_stepped = settings.get('z_stepped', scope.oidic_acquisition_settings.z_stepped)
+        if z_stepped:
+            stack_settings = settings.get('stack_settings', scope.stack_settings)
+        else:
+            stack_settings = None
+
         return cls(scope=scope, 
-                   #dim_order=settings.dim_order, 
-                   stack_settings=settings.get('stack_settings', None), 
-                   time_settings=settings.get('time_settings', None), 
+                   #dim_order=settings.dim_order,        
+                   stack_settings=settings.get('stack_settings', stack_settings), 
+                   time_settings=settings.get('time_settings', xyztc.TimeSettings(num_timepoints=scope.oidic_acquisition_settings.num_timepoints)),
                    channel_settings=settings.get('channel_settings', scope.oidic_channel_settings), 
                    backend=backend, backend_kwargs=backend_kwargs,
-                   images_to_average=settings.get('images_to_average', 1),
-                   background_image=settings.get('background_image', False))
+                   images_to_average=settings.get('images_to_average', scope.oidic_acquisition_settings.frames_to_average),
+                   background_image=settings.get('background_image', scope.oidic_acquisition_settings.background_image))
 
 
     def on_frame(self, sender, frameData, **kwargs):
