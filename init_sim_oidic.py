@@ -162,17 +162,36 @@ def action_manager(MainFrame, scope):
 
 @init_hardware('Liquid Crystals')
 def liquid_crystals(scope):
-    from PYME.Acquire.Hardware.ARCoptix import lcdriver
-    from oidic.pymeacquire_modules import liquid_crystal_calibration
+    #from PYME.Acquire.Hardware.ARCoptix import lcdriver
+    #from oidic.pymeacquire_modules import liquid_crystal_calibration
 
     class SpoofedChannelSettings(object):
+        def __init__(self):
+            self._num_channels = 6
+            self._lc_bias = 0
+
         def set_c(self, c_idx):
             pass
 
+        def set_bias(self, bias):
+            self._lc_bias = bias
+
+        def set_num_channels(self, num_channels):
+            self._num_channels = num_channels
+
+        @property
+        def num_channels(self):
+            return self._num_channels
+
     #scope.lc_driver = lcdriver.LCDriver()
-    scope.oidic_channel_settings = liquid_crystal_calibration.LCChannelSettings(scope)
+    scope.oidic_channel_settings = SpoofedChannelSettings()
     #scope.hardwareChecks.append(scope.oidic_channel_settings.c_on_target)
     # TODO: Do I need a close() function?
+
+@init_hardware('OIDIC')
+def oidic(scope):
+    from oidic.pymeacquire_modules import oidic_acquisition 
+    scope.spoolController.register_acquisition_type('OIDIC', oidic_acquisition.OIDICAcquisition)
 
 @init_gui('OIDIC')
 def oidic(MainFrame, scope):
@@ -180,15 +199,15 @@ def oidic(MainFrame, scope):
     
     # OIDIC acquistion panel
     ap = oidic_acquisition_panel.OIDICAcquisitionPanel(MainFrame, scope)
-    MainFrame.aqPanels.append((ap, 'OIDIC'))
+    MainFrame.register_acquisition_ui('OIDIC', (ap, 'OIDIC'))
 
-    # Menu controls for liquid crystal calibration
-    def launch_cal_frame(event=None):
-        from oidic.pymeacquire_modules import oidic_calibration_frame
-        frame = oidic_calibration_frame.OIDICCalibrationFrame(None,scope)
-        frame.Show()
+    # # Menu controls for liquid crystal calibration
+    # def launch_cal_frame(event=None):
+    #     from oidic.pymeacquire_modules import oidic_calibration_frame
+    #     frame = oidic_calibration_frame.OIDICCalibrationFrame(None,scope)
+    #     frame.Show()
     
-    MainFrame.AddMenuItem('OIDIC', 'Calibration', launch_cal_frame)
+    # MainFrame.AddMenuItem('OIDIC', 'Calibration', launch_cal_frame)
 
 
 joinBGInit() 
