@@ -16,7 +16,7 @@ class OIDICAcquisitionSettings(object):
 
 class OIDICAcquisition(xyztc.XYZTCAcquisition):
     def __init__(self, scope, dim_order='XYCZT', stack_settings=None, 
-                 time_settings=None, channel_settings=None, backend=xyztc.MemoryBackend,
+                 time_settings=None, channel_settings=None, backend=xyztc.MemoryBackend, backend_kwargs={},
                  images_to_average=1, background_image=False):
         """Acqusition object for OIDIC microscopy.
 
@@ -31,7 +31,7 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
             channel_settings = scope.oidic_channel_settings
             
         xyztc.XYZTCAcquisition.__init__(self, scope, dim_order, stack_settings, 
-                                        time_settings, channel_settings, backend)
+                                        time_settings, channel_settings, backend, backend_kwargs=backend_kwargs)
 
         self.channel_settings = channel_settings
 
