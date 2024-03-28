@@ -15,6 +15,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class OIDICAcquisitionPanel(afp.foldingPane):
     def __init__(self, parent, scope, **kwargs):
         afp.foldingPane.__init__(self, parent, caption='OIDIC', **kwargs)
@@ -148,15 +149,15 @@ class OIDICAcquisitionPanel(afp.foldingPane):
         ViewIm3D(self.scope.oidic.storage.image)
 
     def on_bias_change(self, event=None):
-        self.scope.channel_settings.set_bias(float(self.bias.GetValue()))
+        self.scope.oidic_channel_settings.set_bias(float(self.bias.GetValue()))
 
     def set_acquisition_four(self, event=None):
         # Four images per OIDIC acqusition
-        self.scope.channel_settings.set_num_channels(4)
+        self.scope.oidic_channel_settings.set_num_channels(4)
 
     def set_acquisition_six(self, event=None):
         # Six images per OIDIC acqusition
-        self.scope.channel_settings.set_num_channels(6)
+        self.scope.oidic_channel_settings.set_num_channels(6)
 
     def toggle_z_stepped(self, event=None):
         # Display the z-stepping panel if we're z-stepping

@@ -47,9 +47,9 @@ class LCCalibrator(object):
         """
 
         self.scope = scope
-        if not (type(self.scope.channel_settings) == LCChannelSettings):
-            raise TypeError('LCCalibration type required for scope.channel_settings')
-        self.lc_ch_set = self.scope.channel_settings
+        if not (type(self.scope.oidic_channel_settings) == LCChannelSettings):
+            raise TypeError('LCCalibration type required for scope.oidic_channel_settings')
+        self.lc_ch_set = self.scope.oidic_channel_settings
         self.volts_to_check = None
         self.means = None
         self.i = 0

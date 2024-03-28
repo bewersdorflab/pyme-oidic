@@ -65,8 +65,8 @@ def liquid_crystals(scope):
     from oidic.pymeacquire_modules import liquid_crystal_calibration
 
     scope.lc_driver = lcdriver.LCDriver()
-    scope.channel_settings = liquid_crystal_calibration.LCChannelSettings(scope)
-    scope.hardwareChecks.append(scope.channel_settings.c_on_target)
+    scope.oidic_channel_settings = liquid_crystal_calibration.LCChannelSettings(scope)
+    scope.hardwareChecks.append(scope.oidic_channel_settings.c_on_target)
     # TODO: Do I need a close() function?
 
 @init_gui('OIDIC')

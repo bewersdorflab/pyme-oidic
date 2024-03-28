@@ -18,7 +18,7 @@ class OIDICCalibrationFrame(wx.Frame):
         wx.Frame.__init__(self, parent, title="OIDIC Calibration")
         
         self.scope = scope
-        self.lc_ch_set = scope.channel_settings
+        self.lc_ch_set = scope.oidic_channel_settings
         self.lc_calibrator = liquid_crystal_calibration.LCCalibrator(self.scope)
 
         self._init_layout()
