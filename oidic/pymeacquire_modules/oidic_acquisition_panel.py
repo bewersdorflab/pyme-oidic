@@ -128,6 +128,7 @@ class OIDICAcquisitionPanel(wx.Panel, cascading_layout.CascadingLayoutMixin):
 
     def on_bias_change(self, event=None):
         self.scope.oidic_channel_settings.set_bias(float(self.bias.GetValue()))
+        event.Skip()
 
     def set_acquisition_four(self, event=None):
         # Four images per OIDIC acqusition
@@ -146,9 +147,11 @@ class OIDICAcquisitionPanel(wx.Panel, cascading_layout.CascadingLayoutMixin):
         
     def on_averaging_change(self, event=None):
         self.scope.oidic_acquisition_settings.frames_to_average = int(self.images_to_average.GetValue())
+        event.Skip()
 
     def on_timepoints_change(self, event=None):
         self.scope.oidic_acquisition_settings.num_timepoints = int(self.tcNumTimepoints.GetValue())
+        event.Skip()
 
     def on_toggle_background(self, event=None):
         self.scope.oidic_acquisition_settings.background_image = self.background.GetValue()
