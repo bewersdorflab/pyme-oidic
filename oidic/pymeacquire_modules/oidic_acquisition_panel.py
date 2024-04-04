@@ -88,7 +88,7 @@ class OIDICAcquisitionPanel(wx.Panel, cascading_layout.CascadingLayoutMixin):
         hsizer.Add(self.z_stepped, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
         self.standard.SetValue(True)  # non z-stepped by default
-        self.scope.stackSettings.SetSeqLength(1)
+        #self.scope.stackSettings.SetSeqLength(1)
 
         if not hasattr(self.scope, 'stackSettings'):
             self.z_stepped.Disable()
