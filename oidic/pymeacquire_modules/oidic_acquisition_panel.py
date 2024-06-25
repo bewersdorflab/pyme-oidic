@@ -133,10 +133,16 @@ class OIDICAcquisitionPanel(wx.Panel, cascading_layout.CascadingLayoutMixin):
     def set_acquisition_four(self, event=None):
         # Four images per OIDIC acqusition
         self.scope.oidic_channel_settings.set_num_channels(4)
+        self.scope.oidic_channel_settings.populate_chan_voltages()
+        self.scope.oidic_channel_settings.set_c(self.scope.oidic_channel_settings.home_channel())
+        #self.scope.oidic_fs._target_orientation = 3
 
     def set_acquisition_six(self, event=None):
         # Six images per OIDIC acqusition
         self.scope.oidic_channel_settings.set_num_channels(6)
+        self.scope.oidic_channel_settings.populate_chan_voltages()
+        self.scope.oidic_channel_settings.set_c(self.scope.oidic_channel_settings.home_channel())
+        #self.scope.oidic_fs._target_orientation = 5
 
     def toggle_z_stepped(self, event=None):
         # Display the z-stepping panel if we're z-stepping

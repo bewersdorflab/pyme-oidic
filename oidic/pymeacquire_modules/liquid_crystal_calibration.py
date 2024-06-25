@@ -442,7 +442,13 @@ class LCChannelSettings(object):
         if (curr_time - self.__c_time) > self._settling_time:
             return True
         return False
-
+    
+    def home_channel(self):
+        if self._num_channels == 6:
+            self.home_channel_num = 5
+        else:
+            self.home_channel_num = 3
+        return self.home_channel_num
 
 
 
