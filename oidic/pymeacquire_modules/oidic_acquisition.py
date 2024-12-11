@@ -95,8 +95,53 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
         # time.sleep(self.channel_settings._settling_time)
         # self.scope.frameWrangler.start()
 
-    def _init_t(self, time_settings):
-        pass
 
-    def set_t(self, t_idx):
-        pass
+from PYME.IO.acquisition_backends import MemoryBackend
+class TiledOIDICAcquisition(xyztc.TiledXYZTCMixin, OIDICAcquisition):
+    def __init__(self, scope, dim_order='XYCZT', stack_settings=None, tile_settings=None, channel_settings=None, backend=MemoryBackend, backend_kwargs={}, **kwargs):
+        """
+        """
+        
+        xyztc.TiledXYZTCMixin.__init__(self, scope, tile_settings)        
+        OIDICAcquisition.__init__(self, scope, dim_order=dim_order, stack_settings=stack_settings, 
+                                  time_settings={'num_timepoints' : self._scanner.num_tiles}, channel_settings=channel_settings, 
+                                  backend=backend, backend_kwargs=backend_kwargs, **kwargs)
+    @classmethod
+    def from_spool_settings(cls, scope, settings, backend, backend_kwargs={}, series_name=None, spool_controller=None):
+        '''Create an XYZTCAcquisition object from a spool_controller settings object'''
+    
+        backend_kwargs['series_name'] = series_name
+
+        z_stepped = settings.get('z_stepped', scope.oidic_acquisition_settings.z_stepped)
+        if z_stepped:
+            stack_settings = settings.get('stack_settings', scope.stack_settings)
+        else:
+            stack_settings = None
+
+        #fix timing when using fake camera
+        #TODO - move logic into backend?
+        if scope.cam.__class__.__name__ == 'FakeCamera':
+            backend_kwargs['spoof_timestamps'] = True
+            backend_kwargs['cycle_time'] = scope.cam.GetIntegTime()
+
+        tiling_settings = settings.get('tiling_settings', scope.tile_settings)
+    
+        return cls(scope=scope, 
+                    #dim_order=settings.dim_order, 
+                    stack_settings=settings.get('stack_settings', stack_settings), 
+                    tile_settings=tiling_settings, 
+                    channel_settings=settings.get('channel_settings', scope.oidic_channel_settings), 
+                    backend=backend, backend_kwargs=backend_kwargs,
+                    images_to_average=settings.get('images_to_average', scope.oidic_acquisition_settings.frames_to_average),
+                    background_image=settings.get('background_image', scope.oidic_acquisition_settings.background_image))
+    
+    
+    @classmethod
+    def get_frozen_settings(cls, scope, spool_controller=None):
+        if scope.oidic_acquisition_settings.z_stepped:
+            stack_settings = scope.stack_settings
+        else:
+            stack_settings = None
+
+        return {'stack_settings' : stack_settings,
+            'tiling_settings': getattr(scope, 'tile_settings', {})}
