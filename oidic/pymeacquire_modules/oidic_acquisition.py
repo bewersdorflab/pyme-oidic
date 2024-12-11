@@ -55,7 +55,7 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
 
         z_stepped = settings.get('z_stepped', scope.oidic_acquisition_settings.z_stepped)
         if z_stepped:
-            stack_settings = settings.get('stack_settings', scope.stack_settings)
+            stack_settings = settings.get('stack_settings', scope.stackSettings)
         else:
             stack_settings = None
 
