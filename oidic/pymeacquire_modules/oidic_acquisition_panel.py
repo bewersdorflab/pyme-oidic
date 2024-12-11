@@ -17,7 +17,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class OIDICAcquisitionPanel(wx.Panel, cascading_layout.CascadingLayoutMixin):
-    def __init__(self, parent, scope, **kwargs):
+    def __init__(self, parent, scope, tiling=False, **kwargs):
         wx.Panel.__init__(self, parent, **kwargs)
         
         self.scope=scope
@@ -26,6 +26,7 @@ class OIDICAcquisitionPanel(wx.Panel, cascading_layout.CascadingLayoutMixin):
             self.scope.oidic_acquisition_settings = oidic_acquisition.OIDICAcquisitionSettings()
 
         self._background_image = False
+        self._tiling = tiling
 
         self._init_ctrls()
 
@@ -71,12 +72,19 @@ class OIDICAcquisitionPanel(wx.Panel, cascading_layout.CascadingLayoutMixin):
         hsizer.Add(self.images_to_average, 0, wx.ALL, 2)
         vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
 
-        hsizer = wx.BoxSizer(wx.HORIZONTAL)
-        hsizer.Add(wx.StaticText(pan, -1, "# Timepoints:"), 0, wx.ALL, 2)
-        self.tcNumTimepoints = wx.TextCtrl(pan, -1, value='1')
-        self.tcNumTimepoints.Bind(wx.EVT_KILL_FOCUS, self.on_timepoints_change)
-        hsizer.Add(self.tcNumTimepoints, 0, wx.ALL, 2)
-        vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
+        
+        if self._tiling:
+            # only 1 timepoint for tiling, show tiling settings instead
+            from PYME.Acquire.ui.tilesettingsui import TileSettingsUI
+            tile_panel = TileSettingsUI(pan, self.scope)
+            vsizer.Add(tile_panel, 0, wx.ALL | wx.EXPAND, 0)
+        else:
+            hsizer = wx.BoxSizer(wx.HORIZONTAL)
+            hsizer.Add(wx.StaticText(pan, -1, "# Timepoints:"), 0, wx.ALL, 2)
+            self.tcNumTimepoints = wx.TextCtrl(pan, -1, value='1')
+            self.tcNumTimepoints.Bind(wx.EVT_KILL_FOCUS, self.on_timepoints_change)
+            hsizer.Add(self.tcNumTimepoints, 0, wx.ALL, 2)
+            vsizer.Add(hsizer, 0, wx.ALL | wx.EXPAND, 0)
 
         # Z-stepped?
         hsizer = wx.BoxSizer(wx.HORIZONTAL)

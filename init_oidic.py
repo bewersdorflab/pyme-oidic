@@ -69,13 +69,33 @@ def liquid_crystals(scope):
     scope.hardwareChecks.append(scope.oidic_channel_settings.c_on_target)
     # TODO: Do I need a close() function?
 
+@init_hardware('OIDIC')
+def oidic(scope):
+    from oidic.pymeacquire_modules import oidic_acquisition
+
+    # OIDIC acquisition settings
+    scope.oidic_acquisition_settings = oidic_acquisition.OIDICAcquisitionSettings(scope)
+
+    scope.spoolController.register_acquisition_type('OIDIC', oidic_acquisition.OIDICAcquisition)
+    scope.spoolController.register_acquisition_type('TiledOIDIC', oidic_acquisition.TiledOIDICAcquisition)
+    
+
+
 @init_gui('OIDIC')
-def action_manager(MainFrame, scope):
+def oidic(MainFrame, scope):
     from oidic.pymeacquire_modules import oidic_acquisition_panel
     
     # OIDIC acquistion panel
     ap = oidic_acquisition_panel.OIDICAcquisitionPanel(MainFrame, scope)
-    MainFrame.aqPanels.append((ap, 'OIDIC'))
+    MainFrame.register_acquisition_ui('OIDIC', (ap, 'OIDIC'))
+
+    tap = oidic_acquisition_panel.OIDICAcquisitionPanel(MainFrame, scope, tiled=True)
+    MainFrame.register_acquisition_ui('TiledOIDIC', (tap, 'Tiled OIDIC'))
+
+    # Tiled OIDIC acquisition panel
+
+
+    #MainFrame.aqPanels.append((ap, 'OIDIC'))
 
     # Menu controls for liquid crystal calibration
     def launch_cal_frame(event=None):
