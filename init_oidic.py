@@ -74,7 +74,7 @@ def oidic(scope):
     from oidic.pymeacquire_modules import oidic_acquisition
 
     # OIDIC acquisition settings
-    scope.oidic_acquisition_settings = oidic_acquisition.OIDICAcquisitionSettings(scope)
+    #scope.oidic_acquisition_settings = oidic_acquisition.OIDICAcquisitionSettings(scope)
 
     scope.spoolController.register_acquisition_type('OIDIC', oidic_acquisition.OIDICAcquisition)
     scope.spoolController.register_acquisition_type('TiledOIDIC', oidic_acquisition.TiledOIDICAcquisition)
@@ -89,7 +89,7 @@ def oidic(MainFrame, scope):
     ap = oidic_acquisition_panel.OIDICAcquisitionPanel(MainFrame, scope)
     MainFrame.register_acquisition_ui('OIDIC', (ap, 'OIDIC'))
 
-    tap = oidic_acquisition_panel.OIDICAcquisitionPanel(MainFrame, scope, tiled=True)
+    tap = oidic_acquisition_panel.OIDICAcquisitionPanel(MainFrame, scope, tiling=True)
     MainFrame.register_acquisition_ui('TiledOIDIC', (tap, 'Tiled OIDIC'))
 
     # Tiled OIDIC acquisition panel
