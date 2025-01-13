@@ -98,7 +98,7 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
 
 from PYME.IO.acquisition_backends import MemoryBackend
 class TiledOIDICAcquisition(xyztc.TiledXYZTCMixin, OIDICAcquisition):
-    def __init__(self, scope, dim_order='XYCZT', stack_settings=None, tile_settings=None, channel_settings=None, backend=MemoryBackend, backend_kwargs={}, **kwargs):
+    def __init__(self, scope, dim_order='XYCZT', stack_settings=None, tile_settings=None, channel_settings=None, return_to_start=True, backend=MemoryBackend, backend_kwargs={}, **kwargs):
         """
         """
         
@@ -106,6 +106,7 @@ class TiledOIDICAcquisition(xyztc.TiledXYZTCMixin, OIDICAcquisition):
         OIDICAcquisition.__init__(self, scope, dim_order=dim_order, stack_settings=stack_settings, 
                                   time_settings={'num_timepoints' : self._scanner.num_tiles}, channel_settings=channel_settings, 
                                   backend=backend, backend_kwargs=backend_kwargs, **kwargs)
+        self._return_to_start = return_to_start
     @classmethod
     def from_spool_settings(cls, scope, settings, backend, backend_kwargs={}, series_name=None, spool_controller=None):
         '''Create an XYZTCAcquisition object from a spool_controller settings object'''
