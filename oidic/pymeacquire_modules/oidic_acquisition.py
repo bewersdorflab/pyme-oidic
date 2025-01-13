@@ -33,6 +33,9 @@ class OIDICAcquisition(xyztc.XYZTCAcquisition):
             
         xyztc.XYZTCAcquisition.__init__(self, scope, dim_order, stack_settings, 
                                         time_settings, channel_settings, backend, backend_kwargs=backend_kwargs)
+        #xyztc.XYZTCAcquisition.__init__(self, scope, dim_order, stack_settings,
+        #                                time_settings={'num_timepoints' : scope.oidic_acquisition_settings.num_timepoints}, 
+        #                                channel_settings=channel_settings, backend=backend, backend_kwargs=backend_kwargs)
 
         self.channel_settings = channel_settings
 
