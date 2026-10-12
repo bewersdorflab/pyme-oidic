@@ -130,7 +130,7 @@ On the switch panel under the monitor, turn on (green light = on):
 > **Note:** Reconstruction does not have to run on the acquisition computer. Copy the `.h5` files and reconstruct on a personal PC or the lab workstation (with PYME + the OI-DIC module installed) — especially for tiled images that are too large for the acquisition computer's RAM.
 
 1. Open the sample `.h5` file in **PYMEImage** (drag-and-drop the file onto it).
-2. **Modules → OIDIC** to enable the OIDIC module, then click **Reconstruct**.
+2. **Modules → OIDIC** to enable the OIDIC module, then click **OIDIC → Reconstruct**.
 3. When prompted, select the **background reference** file (`oidicbg.h5`).
 4. In *Edit properties*, leave the other parameters (bias 0.15, N frames 6, shear distance 70, wavelength 546) and choose the **reconstruction type**:
    - **integrate** – reconstructs the **optical path difference (OPD)**; quantitative. Do this one first.
