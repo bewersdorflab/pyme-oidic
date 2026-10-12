@@ -135,8 +135,10 @@ On the switch panel under the monitor, turn on (green light = on):
 4. In *Edit properties*, leave the other parameters (bias 0.15, N frames 6, shear distance 70, wavelength 546) and choose the **reconstruction type**:
    - **integrate** – reconstructs the **optical path difference (OPD)**; quantitative. Do this one first.
    - **Riesz** – higher contrast for visualization only; **not quantitative**.
-5. Wait (≈1–2 min). Then **File → Save as → PYME HDF (.h5)**, using the same name as the acquisition plus `_opd`, e.g. `oidic1_500nmx30slices_opd.h5`.
-6. Repeat steps 2–5 with the second reconstruction type if you also want the high-contrast version.
+5. Wait (≈1–2 min).
+6. If tiled image: OI-DIC reconstruction first (OPD or Riesz), then Processing --> Tiling. If Tiling is not showing up under Processing, go Modules --> tiling first and then Processing --> Tiling.
+7. Then **File → Save as → PYME HDF (.h5)**, using the same name as the acquisition plus `_opd`, e.g. `oidic1_500nmx30slices_opd.h5`.
+8. Repeat steps 2–5 with the second reconstruction type if you also want the high-contrast version.
 
 ---
 
